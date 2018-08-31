@@ -4,7 +4,7 @@
 date_default_timezone_set('Asia/Taipei');
 
 // 定義版號
-define('MAPLE', '4.0.11');
+define('MAPLE', '4.0.12');
 
 
 
