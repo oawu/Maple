@@ -459,8 +459,14 @@ if (!function_exists('minText')) {
 
 if (!function_exists('attr')) {
   function attr($attrs) {
-    $attrs = array_map(function($k, $v) { return $v !== true ? $k . '="' . $v . '"' : $k; }, array_keys($attrs), array_values($attrs));
+    $attrs = array_map(function($k, $v) { return is_bool($v) ? $v === true ? $k : '' : ($k . '="' . $v . '"'); }, array_keys($attrs), array_values($attrs));
     return $attrs ? ' ' . implode(' ', $attrs) : '';
+  }
+}
+
+if (!function_exists('isBrowser')) {
+  function isBrowser() {
+    return preg_match('/^(Mozilla|Opera|PSP|Bunjalloo|wii)/i', Input::userAgent()) && !preg_match('/bot|crawl|slurp|spider/i', Input::userAgent());
   }
 }
 

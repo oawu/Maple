@@ -9,7 +9,7 @@ class AdminFormRadio extends AdminFormUnitItems {
   }
 
   protected function getContent() {
-    $value = AdminForm::$flash[$this->name] !== null ? AdminForm::$flash[$this->name] : $this->val;
+    $value = (is_array(AdminForm::$flash) ? array_key_exists($this->name, AdminForm::$flash) : AdminForm::$flash[$this->name] !== null) ? AdminForm::$flash[$this->name] : $this->val;
 
     $return = '';
 

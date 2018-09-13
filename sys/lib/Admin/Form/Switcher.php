@@ -23,7 +23,7 @@ class AdminFormSwitcher extends AdminFormUnit {
     $this->off !== null || gg('請設定 Switcher 關閉值(off)！');
     $this->val === $this->on || $this->val === $this->off || gg('Switcher 預設值請設定為 啟用值(on) 或 關閉值(off) 其中一項！');
 
-    $value = AdminForm::$flash[$this->name] !== null && (AdminForm::$flash[$this->name] === $this->on || AdminForm::$flash[$this->name] === $this->off) ? AdminForm::$flash[$this->name] : $this->val;
+    $value = (is_array(AdminForm::$flash) ? array_key_exists($this->name, AdminForm::$flash) : AdminForm::$flash[$this->name] !== null) && (AdminForm::$flash[$this->name] === $this->on || AdminForm::$flash[$this->name] === $this->off) ? AdminForm::$flash[$this->name] : $this->val;
 
     $return = '';
     $return .= '<div class="switches">';

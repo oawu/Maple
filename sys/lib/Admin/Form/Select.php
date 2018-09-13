@@ -1,7 +1,7 @@
 <?php defined('MAPLE') || exit('此檔案不允許讀取！');
 
 class AdminFormSelect extends AdminFormUnitItems {
-  private $val = '', $focus;
+  private $val = '', $focus, $disable;
 
   public function val($val) {
     $this->val = $val;
@@ -13,14 +13,20 @@ class AdminFormSelect extends AdminFormUnitItems {
     return $this;
   }
 
+  public function disable($disable = true) {
+    $this->disable = $disable;
+    return $this;
+  }
+
   protected function getContent() {
-    $value = AdminForm::$flash[$this->name] !== null ? AdminForm::$flash[$this->name] : $this->val;
+    $value = (is_array(AdminForm::$flash) ? array_key_exists($this->name, AdminForm::$flash) : AdminForm::$flash[$this->name] !== null) ? AdminForm::$flash[$this->name] : $this->val;
 
     $attrs = [
       'name' => $this->name,
     ];
     $this->focus && $attrs['autofocus'] = $this->focus;
     $this->need && $attrs['required'] = true;
+    $this->disable && ($attrs['disabled'] = $this->disable) && $attrs['required'] = false;
 
     $return = '';
     $return .= '<select' . attr($attrs) .'>';

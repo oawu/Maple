@@ -1,7 +1,7 @@
 <?php defined('MAPLE') || exit('此檔案不允許讀取！');
 
 abstract class AdminFormUnit {
-  protected $title, $tip, $name, $need, $obj;
+  protected $title, $tip, $name, $need, $obj, $className;
 
   public function __construct($title, $name) {
     $traces = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT);
@@ -17,6 +17,11 @@ abstract class AdminFormUnit {
 
   public static function create($title, $name) {
     return new static($title, $name);
+  }
+  
+  public function className($className) {
+    $this->className = $className;
+    return $this;
   }
   
   public function title($title) {
@@ -52,7 +57,7 @@ abstract class AdminFormUnit {
       return $this->getContent();
 
     $return = '';
-    $return .= '<div class="row' . ($this instanceof AdminFormSwitcher ? ' min' : '') . '">';
+    $return .= '<div class="row' . ($this instanceof AdminFormSwitcher ? ' min' : '') . ($this->className ? ' ' . $this->className : '') . '">';
       $return .= '<b' . attr($attrs) . '>' . $this->title . '</b>';
       $return .= $this->getContent();
     $return .= '</div>';

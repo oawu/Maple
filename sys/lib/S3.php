@@ -379,7 +379,7 @@ class S3 {
   }
 
   private static function getMimeByExtension($file) {
-    static $extensions, $exts;
+    static $extensions;
 
     $extension = strtolower(substr(strrchr($file, '.'), 1));
 
@@ -419,9 +419,11 @@ class S3 {
 
     return $request->isSuccessResponse($rest) ? true : false;
   }
+
   public function getObjectInfo($bucket, $uri) {
     return S3Request::create('HEAD', $this, $bucket, $uri)->isSuccessResponse($rest, [200, 404]) ? $rest->code == 200 ? $rest->headers : false : false;
   }
+
   public function copyObject($srcBucket, $srcUri, $bucket, $uri, $acl = self::ACL_PUBLIC_READ, $amzHeaders = [], $headers = []) {
     $request = S3Request::create('PUT', $this, $bucket, $uri)
                         ->setHeaders($headers = array_merge(['Content-Length' => 0], $headers))

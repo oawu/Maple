@@ -1,7 +1,7 @@
 <?php defined('MAPLE') || exit('此檔案不允許讀取！');
 
 class AdminFormTextarea extends AdminFormUnit {
-  private $val = '', $type = 'pure', $placeholder, $focus, $minLength, $maxLength;
+  private $val = '', $type = 'pure', $placeholder, $focus, $minLength, $maxLength, $readonly;
 
   public function val($val) {
     is_string($val) && $this->val = $val;
@@ -23,6 +23,11 @@ class AdminFormTextarea extends AdminFormUnit {
     return $this;
   }
 
+  public function readonly($readonly = true) {
+    $this->readonly = $readonly;
+    return $this;
+  }
+
   public function minLength($minLength) {
     $this->minLength = $minLength;
     return $this;
@@ -34,7 +39,7 @@ class AdminFormTextarea extends AdminFormUnit {
   }
 
   protected function getContent() {
-    $value = AdminForm::$flash[$this->name] !== null ? AdminForm::$flash[$this->name] : $this->val;
+    $value = (is_array(AdminForm::$flash) ? array_key_exists($this->name, AdminForm::$flash) : AdminForm::$flash[$this->name] !== null) ? AdminForm::$flash[$this->name] : $this->val;
     $this->need && ($this->minLength === null || $this->minLength <= 0) && $this->minLength(1);
 
     $attrs = [
@@ -47,6 +52,7 @@ class AdminFormTextarea extends AdminFormUnit {
     $this->minLength && $attrs['minlength'] = $this->minLength;
     $this->maxLength && $attrs['maxlength'] = $this->maxLength;
     $this->placeholder && $attrs['placeholder'] = $this->placeholder;
+    $this->readonly && $attrs['readonly'] = true;
 
     return '<textarea' . attr($attrs) .'>' . $value . '</textarea>';
   }
