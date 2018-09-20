@@ -152,12 +152,17 @@ class Router {
     return $key !== null ? array_key_exists($key, self::$params) ? self::$params[$key] : null : self::$params;
   }
 
-  public static function className() {
-    return self::$className;
-  }
-
-  public static function methodName() {
-    return self::$methodName;
+  public function __call($name, $arguments) {
+    if ($name == 'className')
+      return $this->class;
+    
+    if ($name == 'methodName')
+      return $this->method;
+    
+    if ($name == 'path')
+      return $this->path;
+    
+    throw new Exception('Call to undefined method Router::' . $name);
   }
 
   public static function setStatus($status = 200) {
@@ -206,6 +211,9 @@ class Router {
   }
 
   public static function __callStatic ($name, $args) {
+    if (in_array($name, ['className', 'methodName']))
+      return self::$$name;
+
     if (!in_array($name = strtolower($name), ['get', 'post', 'put', 'delete', 'del', 'cli']))
       return false;
 
