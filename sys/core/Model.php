@@ -62,7 +62,10 @@ if (!function_exists('\M\useModel')) {
         isset($options[0]) && $options[0] instanceof \Where && $options[0] = ['where' => $options[0]->toArray()];
         isset($options[0]) && is_string($options[0]) && $options[0] = ['where' => $options];
 
-        $obj = call_user_func_array(['static', 'find'], array_merge(['one'], [array_merge($options, ['select' => 'COUNT(*)', 'readonly' => true])]))->attrs();
+        if (!$obj = call_user_func_array(['static', 'find'], array_merge(['one'], [array_merge($options, ['select' => 'COUNT(*)', 'readonly' => true])])))
+          return 0;
+
+        $obj = $obj->attrs();
         $obj = array_shift($obj);
         return intval($obj);
       }
