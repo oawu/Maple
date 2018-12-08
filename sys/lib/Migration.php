@@ -69,7 +69,12 @@ class Migration {
     
     $data = include_once($file);
 
-    isset($data['up'], $data['at'], $data['down']) && is_string($data['up']) && is_string($data['down']) && is_string($data['at']) || gg('Migration 錯誤，檔案結構格式錯誤！', '請檢查 up、down 以及 at 功能有缺！', 'File：' . $file);
+    isset($data['up'], $data['at'], $data['down'])
+      && is_string($data['at'])
+      || gg('Migration 錯誤，檔案結構格式錯誤！', '請檢查 up、down 以及 at 功能有缺！', 'File：' . $file);
+
+    is_string($data['up']) && $data['up'] = [$data['up']];
+    is_string($data['down']) && $data['down'] = [$data['down']];
 
     self::$gets[$file] = $data;
     return $isUp !== null ? $isUp ? self::$gets[$file]['up'] : self::$gets[$file]['down'] : self::$gets[$file];
@@ -79,8 +84,10 @@ class Migration {
     $last = !$isUp && $to ? array_pop($tmps) : null;
 
     foreach ($tmps as $file) {
-      if (($sql = self::get($file[1], $isUp)) && ($error = self::query($sql, [], PDO::FETCH_ASSOC, true)))
-        return ['錯誤原因' => $error, "SQL 語法" => $sql];
+      if ($sqls = self::get($file[1], $isUp))
+        foreach ($sqls as $sql)
+          if ($error = self::query($sql, [], PDO::FETCH_ASSOC, true))
+            return ['錯誤原因' => $error, "SQL 語法" => $sql];
 
       self::$obj->version = $file[0];
       self::$obj->save();
