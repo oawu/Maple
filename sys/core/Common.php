@@ -458,7 +458,15 @@ if (!function_exists('minText')) {
 }
 
 if (!function_exists('attr')) {
-  function attr($attrs) {
+  function attr($attrs, $excludes = []) {
+    $attrs = array_filter($attrs, function($attr) { return $attr !== null; });
+
+    is_string($excludes) && $excludes = [$excludes];
+    if ($excludes)
+      foreach ($attrs as $key => $value)
+        if (in_array($key, $excludes))
+          unset($attrs[$key]);
+
     $attrs = array_map(function($k, $v) { return is_bool($v) ? $v === true ? $k : '' : ($k . '="' . $v . '"'); }, array_keys($attrs), array_values($attrs));
     return $attrs ? ' ' . implode(' ', $attrs) : '';
   }

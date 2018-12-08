@@ -48,14 +48,14 @@ class Pagination {
 
     $links = [];
     
-    $start == 1 || array_push($links, ['text' => Pagination::$firstText, 'offset' => 1, 'classes' => [Pagination::$firstClass]]);
+    Pagination::$firstClass && ($start == 1 || array_push($links, ['text' => Pagination::$firstText, 'offset' => 1, 'classes' => [Pagination::$firstClass]]));
     $start == $gets[$offsetKey] || array_push($links, ['text' => Pagination::$prevText, 'offset' => $gets[$offsetKey] - 1, 'classes' => [Pagination::$prevClass]]);
 
     for ($i = $start; $i <= $end; $i++)
       array_push($links, ['text' => $i, 'offset' => $i, 'classes' => [Pagination::$pageClass, $i == $gets[$offsetKey] ? Pagination::$activeClass : '']]);
 
     $end == $gets[$offsetKey] || array_push($links, ['text' => Pagination::$nextText, 'offset' => $gets[$offsetKey] + 1, 'classes' => [Pagination::$nextClass]]);
-    $end == $cnt || array_push($links, ['text' => Pagination::$lastText, 'offset' => $cnt, 'classes' => [Pagination::$lastClass]]);
+    Pagination::$lastClass && ($end == $cnt || array_push($links, ['text' => Pagination::$lastText, 'offset' => $cnt, 'classes' => [Pagination::$lastClass]]));
 
     return [
       'offset' => ($gets[$offsetKey] - 1) * $gets[$limitKey],
