@@ -613,9 +613,18 @@ spl_autoload_register(function($className) {
     return false;
 
   $uploader = in_array($modelName, ['Uploader', 'ImageUploader', 'FileUploader']) ? 'Uploader' . DIRECTORY_SEPARATOR : '';
-  $path = ($namespace == '_M' || $uploader ? PATH_SYS_MODEL . $uploader : PATH_MODEL) . $modelName . '.php';
+  
+  $path = null;
+  if ($namespace == '_M' || $uploader) {
+    if (is_file($tmp = PATH_SYS_MODEL . $uploader . $modelName . '.php') && is_readable($tmp))
+      $path = $tmp;
+  } else {
+    foreach (array_merge([PATH_MODEL], array_filter(array_map(function($t) { return !in_array($t, ['.', '..']) ? PATH_MODEL . $t . DIRECTORY_SEPARATOR : null; }, scandir(PATH_MODEL)), 'is_dir')) as $tmp)
+      if (is_file($tmp = $tmp . $modelName . '.php') && is_readable($tmp) && $path = $tmp)
+        break;
+  }
 
-  if (!(is_file($path) && is_readable($path)))
+  if ($path === null)
     return false;
 
   include_once $path;
