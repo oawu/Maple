@@ -1,0 +1,18 @@
+
+// <?php echo $title;?>
+
+Router::dir('admin', 'Admin', function() {
+  Router::get('<?php echo $hasParent ? $parentRouterUri . '/(' . $parentModelFkey . ':id)/' : '';?><?php echo $routerUri;?>')->controller('<?php echo $controllerName;?>@index');
+  Router::get('<?php echo $hasParent ? $parentRouterUri . '/(' . $parentModelFkey . ':id)/' : '';?><?php echo $routerUri;?>/add')->controller('<?php echo $controllerName;?>@add');
+  Router::post('<?php echo $hasParent ? $parentRouterUri . '/(' . $parentModelFkey . ':id)/' : '';?><?php echo $routerUri;?>')->controller('<?php echo $controllerName;?>@create');
+  Router::get('<?php echo $hasParent ? $parentRouterUri . '/(' . $parentModelFkey . ':id)/' : '';?><?php echo $routerUri;?>/(id:id)/edit')->controller('<?php echo $controllerName;?>@edit');
+  Router::put('<?php echo $hasParent ? $parentRouterUri . '/(' . $parentModelFkey . ':id)/' : '';?><?php echo $routerUri;?>/(id:id)')->controller('<?php echo $controllerName;?>@update');
+  Router::get('<?php echo $hasParent ? $parentRouterUri . '/(' . $parentModelFkey . ':id)/' : '';?><?php echo $routerUri;?>/(id:id)')->controller('<?php echo $controllerName;?>@show');
+  Router::delete('<?php echo $hasParent ? $parentRouterUri . '/(' . $parentModelFkey . ':id)/' : '';?><?php echo $routerUri;?>/(id:id)')->controller('<?php echo $controllerName;?>@delete');
+<?php if ($sort) { ?>
+  Router::post('<?php echo $hasParent ? $parentRouterUri . '/(' . $parentModelFkey . ':id)/' : '';?><?php echo $routerUri;?>/sort')->controller('<?php echo $controllerName;?>@sort');
+<?php }
+      if ($enable) { ?>
+  Router::post('<?php echo $hasParent ? $parentRouterUri . '/(' . $parentModelFkey . ':id)/' : '';?><?php echo $routerUri;?>/(id:id)/enable')->controller('<?php echo $controllerName;?>@enable');
+<?php }?>
+});

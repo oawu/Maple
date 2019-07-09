@@ -1,0 +1,97 @@
+
+<?php if ($images) { ?>
+use \CRUD\Show\Image    as Image;
+<?php } ?>
+use \CRUD\Show\Text     as Text;
+<?php if ($textareas) { ?>
+use \CRUD\Show\Textarea as Textarea;
+<?php } ?>
+
+echo $show->back();
+
+echo $show->panel(function($obj) {
+
+  Text::create('ID')
+      ->val($obj->id);
+<?php if ($images) {
+        foreach ($images as $image) { ?>
+
+  Image::create('<?php echo $image['text'];?>')
+       ->val($obj-><?php echo $image['name'];?>);
+<?php   }
+      }
+      if ($texts) {
+        foreach ($texts as $text) { ?>
+
+  Text::create('<?php echo $text['text'];?>')
+      ->val($obj-><?php echo $text['name'];?>);
+<?php   }
+      }
+      if ($textareas) {
+        foreach ($textareas as $textarea) { ?>
+
+  Textarea::create('<?php echo $textarea['text'];?>')
+          ->val($obj-><?php echo $textarea['name'];?>);
+<?php   }
+      } ?>
+
+  Text::create('新增時間')
+      ->val($obj->createAt);
+});<?php return;
+
+
+
+/* --------------------------------------------------
+ *  可用元素
+ * -------------------------------------------------- */
+
+// use \CRUD\Show\Ckeditor as Ckeditor;
+// use \CRUD\Show\Image    as Image;
+// use \CRUD\Show\Images   as Images;
+// use \CRUD\Show\Items    as Items;
+// use \CRUD\Show\Links    as Links;
+// use \CRUD\Show\Medias   as Medias;
+// use \CRUD\Show\Text     as Text;
+// use \CRUD\Show\Textarea as Textarea;
+// use \CRUD\Show\Texts    as Texts;
+// use \CRUD\Show\Json     as Json;
+
+
+
+/* --------------------------------------------------
+ *  使用範例
+ * -------------------------------------------------- */
+
+// Ckeditor::create('內容')
+//         ->val($obj->content);
+
+// Image::create('封面')
+//      ->val($obj->cover);
+
+// Images::create('封面')
+//       ->val(array_column($obj->relations, 'cover'));
+
+// Items::create('項目')
+//     ->val(['String', 'String']);
+
+// Links::create('鏈結')
+//     ->val([\HTML::A, ['href', 'text']]);
+
+// Texts::create('項目')
+//     ->val(['String', 'String']);
+
+// Medias::create('多媒體')
+//     ->val([
+//       ['type' => 'video', 'video' => 'video src'],
+//       ['type' => 'video', 'video' => FileUploader],
+//       ['type' => 'image', 'image' => ImageUploader],
+//     ]);
+
+// Text::create('標題')
+//     ->val($obj->title);
+
+// Textarea::create('內容')
+//         ->val($obj->content);
+
+// Json::create('錯誤訊息')
+//     ->val($obj->content);

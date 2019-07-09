@@ -1,0 +1,6 @@
+if hash <?php echo $cmd;?> 2>/dev/null
+then
+  echo "true"
+else
+  echo "false"
+fi

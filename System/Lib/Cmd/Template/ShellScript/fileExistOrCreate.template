@@ -1,0 +1,13 @@
+if [ -f <?php echo $path;?> ]
+then
+  echo "true"
+else
+  touch <?php echo $path;?>
+
+  if [ -f <?php echo $path;?> ]
+  then
+    echo "true"
+  else
+    echo "false"
+  fi
+fi

@@ -1,0 +1,10 @@
+.DS_Store
+sftp-config*
+
+/Config/*/
+/File/*
+/Public/Storage/*
+/vendor/*
+
+composer.lock
+/System/Env.php

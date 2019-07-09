@@ -1,0 +1,4 @@
+while read line
+do
+  echo "$line" >> "<?php echo $logPath;?>"
+done < "<?php echo $lockPath;?>"

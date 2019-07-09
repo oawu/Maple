@@ -1,0 +1,156 @@
+
+<?php if ($enable) { ?>
+use \CRUD\Form\Switcher as Switcher;
+<?php }
+      if ($images) { ?>
+use \CRUD\Form\Image    as Image;
+<?php }
+      if ($texts) { ?>
+use \CRUD\Form\Input    as Input;
+<?php }
+      if ($textareas) { ?>
+use \CRUD\Form\Textarea as Textarea;
+<?php } ?>
+
+echo $form->back();
+
+echo $form->form(function() {
+<?php if ($enable) { ?>
+
+  Switcher::create('enable', '啟用')
+          ->need()
+          ->on(<?php echo $modelName;?>::ENABLE_YES)
+          ->off(<?php echo $modelName;?>::ENABLE_NO)
+          ->val(<?php echo $modelName;?>::ENABLE_NO);
+<?php }
+      if ($images) {
+        foreach ($images as $image) { ?>
+  
+  Image::create('<?php echo $image['name'];?>', '<?php echo $image['text'];?>')<?php
+          if ($image['need']) { ?>
+
+       ->need()<?php
+          }
+          if (isset($image['accept'])) { ?>
+
+       ->accept('<?php echo $image['accept'];?>')<?php
+          } else { ?>
+
+       ->accept('image/*')<?php
+          }?>;
+<?php   }
+      }
+      if ($texts) {
+        foreach ($texts as $text) { ?>
+  
+  Input::create('<?php echo $text['name'];?>', '<?php echo $text['text'];?>')<?php
+          if ($text['need']) { ?>
+       
+       ->need()<?php
+          }
+          if (isset($text['type']) && $text['type'] != 'text') { ?>
+       
+       ->type('<?php echo $text['type'];?>')<?php
+          }
+          if (isset($text['focus']) && $text['focus']) { ?>
+
+       ->focus()<?php
+          } ?>;
+<?php   }
+      }
+      if ($textareas) {
+        foreach ($textareas as $textarea) { ?>
+
+  Textarea::create('<?php echo $textarea['name'];?>', '<?php echo $textarea['text'];?>')<?php
+          if ($textarea['need']) { ?>
+          
+          ->need()<?php
+          }
+          if (isset($textarea['type']) && $textarea['type'] != 'pure') { ?>
+          
+          ->type('<?php echo $textarea['type'];?>')<?php
+          }
+          if (isset($textarea['focus']) && $textarea['focus']) { ?>
+          
+          ->focus()<?php
+          } ?>;
+<?php   }
+      } ?>
+});<?php return;
+
+
+
+/* --------------------------------------------------
+ *  可用元素
+ * -------------------------------------------------- */
+
+// use \CRUD\Form\Images   as Images;
+// use \CRUD\Form\Image    as Image;
+// use \CRUD\Form\Input    as Input;
+// use \CRUD\Form\Radio    as Radio;
+// use \CRUD\Form\Select   as Select;
+// use \CRUD\Form\Switcher as Switcher;
+// use \CRUD\Form\Textarea as Textarea;
+
+
+
+/* --------------------------------------------------
+ *  使用範例
+ * -------------------------------------------------- */
+
+// Images::create('covers', '圖片')
+//       ->need()                               // 非必要 | Bool   | false           | 是否必填
+//       ->tip('')                              // 非必要 | String | ''              | 提示
+//       ->accept('image/*')                    // 非必要 | String | null            | 選擇視窗過濾的檔案類型
+//       ->val([]);                             // 非必要 | Array  | [ImageUploader] | 預設值
+
+// Image::create('cover', '圖片')
+//      ->need()                                // 非必要 | Bool   | false           | 是否必填
+//      ->tip('')                               // 非必要 | String | ''              | 提示
+//      ->accept('image/*')                     // 非必要 | String | null            | 選擇視窗過濾的檔案類型
+//      ->val('');                              // 非必要 | String | ''              | 預設值
+
+// Input::create('name', '名稱')
+//      ->need()                                // 非必要 | Bool   | false           | 是否必填
+//      ->tip('')                               // 非必要 | String | ''              | 提示
+//      ->type('text')                          // 非必要 | String | text            | 類型      | text, number, email, password, date
+//      ->focus()                               // 非必要 | Bool   | false           | 是否一進頁面時，就自動 focus
+//      ->placeholder('')                       // 非必要 | String | '請輸入…'        | 提示
+//      ->minLength(0)                          // 非必要 | Int    | null            | 欄位內容最大長度
+//      ->maxLength(2)                          // 非必要 | Int    | null            | 欄位內容最小長度
+//      ->readonly()                            // 非必要 | Bool   | false           | 是否唯讀模式
+//      ->min(0)                                // 非必要 | Int    | null            | type 為 number 使用，最大數字範圍
+//      ->max(100)                              // 非必要 | Int    | null            | type 為 number 使用，最小數字範圍
+//      ->val('');                              // 非必要 | String | ''              | 預設值
+
+// Radio::create('enable', '啟用')
+//      ->need()                                // 非必要 | Bool   | false           | 是否必填
+//      ->tip('')                               // 非必要 | String | ''              | 提示
+//      ->items(\M\Model::ENABLE)               // 非必要 | Array  | []              | 選項.      | [value1 => text1, value2 => text2, ..]
+//      ->val(\M\Model::ENABLE_YES);            // 非必要 | String | null            | 預設值，會與 items 比對，若相符的話會將該元素 checked
+
+// Select::create('enable', '啟用')
+//      ->need()                                // 非必要 | Bool   | false           | 是否必填
+//      ->tip('')                               // 非必要 | String | ''              | 提示
+//      ->focus()                               // 非必要 | Bool   | false           | 是否一進頁面時，就自動 focus
+//      ->items(\M\Model::ENABLE)               // 非必要 | Array  | []              | 選項.      | [value1 => text1, value2 => text2, ..]
+//      ->readonly()                            // 非必要 | Bool   | false           | 是否唯讀模式
+//      ->val(\M\Model::ENABLE_YES);            // 非必要 | String | null            | 預設值，會與 items 比對，若相符的話會將該元素 selected
+
+// Switcher::create('enable', '啟用')
+//         ->need()                             // 非必要 | Bool   | false           | 是否必填
+//         ->tip('')                            // 非必要 | String | ''              | 提示
+//         ->on(\M\Model::ENABLE_YES)           // 必要！ | String |                 | 開啟時送出表單的值
+//         ->off(\M\Model::ENABLE_NO)           // 必要！ | String |                 | 關閉時送出表單的值
+//         ->val(\M\Model::ENABLE_YES);         // 必要！ | String |                 | 預設值，會與 on、off 比對判斷是否預設開啟
+
+// Textarea::create('content', '內容')
+//         ->need()                             // 非必要 | Bool   | false           | 是否必填
+//         ->tip('')                            // 非必要 | String | ''              | 提示
+//         ->type('pure')                       // 非必要 | String | pure            | 類型      | pure, ckeditor
+//         ->focus()                            // 非必要 | Bool   | false           | type 為 pure 使用，是否一進頁面時，就自動 focus
+//         ->placeholder('')                    // 非必要 | String | '請輸入…'        | type 為 pure 使用，提示
+//         ->minLength(0)                       // 非必要 | Int    | null            | type 為 pure 使用，欄位內容最大長度
+//         ->maxLength(2)                       // 非必要 | Int    | null            | type 為 pure 使用，欄位內容最小長度
+//         ->readonly()                         // 非必要 | Bool   | false           | 是否唯讀模式
+//         ->val('');                           // 非必要 | String | ''              | 預設值

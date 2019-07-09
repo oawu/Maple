@@ -1,0 +1,19 @@
+{
+  "name": "Maple7-ApiDoc",
+  "version": "7.1.0",
+  "description": "API 文件！",
+  "private": true,
+  "author": "OA Wu",
+  "license": "MIT",
+  "email": "comdan66@gmail",
+  "devDependencies": {
+    "apidoc": "^0.17.7",
+    "chokidar": "^2.0.4",
+    "cheerio": "^1.0.0-rc.3",
+    "mime": "^2.4.4",
+    "node-notifier": "^5.2.1",
+    "socket.io": "^2.2.0",
+    "aws-sdk": "^2.315.0",
+    "md5-file": "^4.0.0"
+  }
+}

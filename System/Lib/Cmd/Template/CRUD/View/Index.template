@@ -1,0 +1,185 @@
+
+use \CRUD\Table\Search\Input    as Input;
+<?php if ($enable) { ?>
+use \CRUD\Table\Search\Checkbox as Checkbox;
+<?php } ?>
+
+<?php if ($enable) { ?>
+use \CRUD\Table\Switcher as Switcher;
+<?php } ?>
+use \CRUD\Table\Text     as Text;
+<?php if ($images) { ?>
+use \CRUD\Table\Image    as Image;
+<?php } ?>
+use \CRUD\Table\Ctrl     as Ctrl;
+
+<?php if ($hasParent) { ?>
+echo $table->back();
+<?php } ?>
+
+echo $table->search(function() {
+
+  Input::create('ID')
+       ->sql('id = ?');
+<?php if ($enable) { ?>
+
+  Checkbox::create('啟用')
+          ->items(<?php echo $modelName;?>::ENABLE)
+          ->sql('enable IN (?)');
+<?php }
+      if ($texts) {
+        foreach ($texts as $text) { ?>
+
+  Input::create('<?php echo $text['text'];?>')
+       ->sql('<?php echo $text['name'];?> LIKE ?');
+<?php   }
+      }
+      if ($textareas) {
+        foreach ($textareas as $textarea) { ?>
+
+  Input::create('<?php echo $textarea['text'];?>')
+       ->sql('<?php echo $textarea['name'];?> LIKE ?');
+<?php   }
+      } ?>
+});
+
+echo $table->list(function($obj) {
+<?php if ($enable) { ?>
+
+  Switcher::create('啟用')
+          ->on(<?php echo $modelName;?>::ENABLE_YES)
+          ->off(<?php echo $modelName;?>::ENABLE_NO)
+          ->url(Url::router('Admin<?php echo $controllerName;?>Enable', $obj))
+          ->column('enable');
+<?php } ?>
+
+  Text::create('ID')
+      ->width(60)
+      ->order('id')
+      ->val($obj->id);
+<?php if ($images) { ?>
+
+  Image::create('<?php echo $images[0]['text'];?>')
+       ->val($obj-><?php echo $images[0]['name'];?>);
+<?php }
+      if ($texts) { ?>
+
+  Text::create('<?php echo $texts[0]['text'];?>')
+      ->width(150)
+      ->val($obj-><?php echo $texts[0]['name'];?>);
+<?php }
+      if ($textareas) { ?>
+
+  Text::create('<?php echo $textareas[0]['text'];?>')
+      ->val(minText($obj-><?php echo $textareas[0]['name'];?>));
+<?php } ?>
+
+  Text::create('新增時間')
+      ->width(150)
+      ->val($obj->createAt);
+
+  Ctrl::create()
+      ->addShow('Admin<?php echo $controllerName;?>Show', $obj)
+      ->addEdit('Admin<?php echo $controllerName;?>Edit', $obj)
+      ->addDelete('Admin<?php echo $controllerName;?>Delete', $obj);
+});
+
+echo $table->pages();<?php return;
+
+
+
+/* --------------------------------------------------
+ *  可用元素
+ * -------------------------------------------------- */
+
+// use \CRUD\Table\Search\Checkbox as Checkbox;
+// use \CRUD\Table\Search\Input    as Input;
+// use \CRUD\Table\Search\Radio    as Radio;
+// use \CRUD\Table\Search\Select   as Select;
+
+
+
+/* --------------------------------------------------
+ *  使用範例
+ * -------------------------------------------------- */
+
+// Checkbox::create('啟用')
+//         ->items(\M\Model::ENABLE)
+//         ->sql('enable IN (?)');
+
+// Input::create('使用者名稱')
+//      ->sql(function($val) {
+//        return Where::create('userId IN (?)',
+//          \M\User::arr('id', 'name LIKE ?', '%' . $val . '%'));
+//      });
+
+// Radio::create('啟用')
+//      ->items(\M\Model::ENABLE)
+//      ->sql('enable IN (?)');
+
+// Select::create('啟用')
+//       ->items(\M\Model::ENABLE)
+//       ->sql('enable IN (?)');
+
+
+
+/* --------------------------------------------------
+ *  可用元素
+ * -------------------------------------------------- */
+
+// use \CRUD\Table\Choice   as Choice;
+// use \CRUD\Table\Ctrl     as Ctrl;
+// use \CRUD\Table\Images   as Images;
+// use \CRUD\Table\Items    as Items;
+// use \CRUD\Table\Links    as Links;
+// use \CRUD\Table\Switcher as Switcher;
+// use \CRUD\Table\Text     as Text;
+// use \CRUD\Table\Texts    as Texts;
+// use \CRUD\Table\Image    as Image;
+
+
+
+/* --------------------------------------------------
+ *  使用範例
+ * -------------------------------------------------- */
+
+// Choice::create('挑選')
+//          ->method('post')
+//          ->action(Url::router('RouterName'))
+//          ->id($obj->id)
+//          ->name($obj->name)
+//          ->width(56)
+//          ->align('center');
+
+// Ctrl::create()
+//     ->addShow('{RouterName}Show', $obj)
+//     ->addEdit('{RouterName}Edit', $obj)
+//     ->addDelete('{RouterName}Delete', $obj);
+
+// Images::create('圖片')
+//       ->val([ImageUploader, 'String', ..]);
+
+// Items::create('項目')
+//       ->val(['String', 'String', ..]);
+
+// Texts::create('項目')
+//       ->val(['String', 'String', ..]);
+
+// Links::create('鏈結')
+//      ->val([\HTML\A, ['href', 'text']]);
+//       ->val(['String', 'String', ..]);
+
+// Switcher::create('啟用')
+//         ->on(\M\Model::ENABLE_YES)
+//         ->off(\M\Model::ENABLE_NO)
+//         ->url(Url::router('{RouterName}Enable', $obj))
+//         ->column('enable');
+
+// Text::create('ID')
+//     ->width(60)
+//     ->order('id')
+//     ->align('center')
+//     ->val($obj->id);
+
+// Image::create('封面')
+//      ->val($obj->cover);
