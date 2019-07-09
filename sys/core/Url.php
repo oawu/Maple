@@ -68,15 +68,18 @@ class Url {
       return false;
 
     $code = array_shift ($args);
-    $code = !is_numeric ($code) ? isset($_SERVER['SERVER_PROTOCOL'], $_SERVER['REQUEST_METHOD']) && $_SERVER['SERVER_PROTOCOL'] === 'HTTP/1.1' ? $_SERVER['REQUEST_METHOD'] !== 'GET' ? 303 : 307 : 302 : $code;
+    if (!is_numeric ($code)) {
+      $args = [$code];
+      $code = isset($_SERVER['SERVER_PROTOCOL'], $_SERVER['REQUEST_METHOD']) && $_SERVER['SERVER_PROTOCOL'] === 'HTTP/1.1' ? $_SERVER['REQUEST_METHOD'] !== 'GET' ? 303 : 307 : 302;
+    }
 
     if (is_string($args[0]) && preg_match('/^(http|https):\/{2}/', $args[0], $matches))
-      return header('Location: ' . $args[0], true, $code);
+      return @header('Location: ' . $args[0], true, $code);
 
     if (!$args = array_filter(explode('/', (trim(preg_replace('/\/+/', '/', implode('/', arrayFlatten($args))), '/'))), function ($t) { return $t !== ''; }))
       return false;
 
-    header('Location: ' . self::base($args), true, $code);
+    @header('Location: ' . self::base($args), true, $code);
     exit;
   }
 
