@@ -52,7 +52,7 @@ class Asset {
       return $str;
 
     foreach ($this->list['css'] as $path => $minify)
-      $str .= '<link href="' . asset($path) . '?v=' . $this->version . '" rel="stylesheet" type="text/css" />';
+      $str .= '<link href="' . (preg_match('/^https?:\/\/.*/', $path) ? $path : asset($path)) . '?v=' . $this->version . '" rel="stylesheet" type="text/css" />';
 
     return $str;
   }
@@ -64,7 +64,7 @@ class Asset {
       return $str;
 
     foreach ($this->list['js'] as $path => $minify)
-      $str .= '<script src="' . asset($path) . '?v=' . $this->version . '" language="javascript" type="text/javascript" ></script>';
+      $str .= '<script src="' . (preg_match('/^https?:\/\/.*/', $path) ? $path : asset($path)) . '?v=' . $this->version . '" language="javascript" type="text/javascript" ></script>';
 
     return $str;
   }
