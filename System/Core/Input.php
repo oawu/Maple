@@ -176,15 +176,15 @@ class Input {
     return self::fetchFromArray($_GET, $index, $xssClean);
   }
 
-  public static function post($index = null, $xssClean = null) {
+  public static function post($index = null, $xssClean = true) {
     return self::fetchFromArray($_POST, $index, $xssClean);
   }
 
-  public static function cookie($index = null, $xssClean = null) {
+  public static function cookie($index = null, $xssClean = true) {
     return self::fetchFromArray($_COOKIE, $index, $xssClean);
   }
 
-  public static function server($index, $xssClean = null) {
+  public static function server($index, $xssClean = true) {
     return self::fetchFromArray($_SERVER, $index, $xssClean);
   }
 
@@ -380,5 +380,15 @@ class Input {
       return self::getUploadFile($index, 'one');
 
     return self::getUploadFile($matches);
+  }
+
+  public static function ValidPost($closure) {
+    Load::systemLib('Validator');
+    return $closure(Input::post());
+  }
+
+  public static function ValidFile($closure) {
+    Load::systemLib('Validator');
+    return $closure(Input::file());
   }
 }

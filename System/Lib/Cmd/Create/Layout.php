@@ -33,7 +33,7 @@ class Layout {
 
   private static function splitCRUDColumnFormat2(&$column1s, &$column2s, &$column3s) {
     foreach (['column1s', 'column2s', 'column3s'] as $column)
-      $$column = array_values(array_filter(array_map(function($val) { if (!(isset($val['need']) && is_bool($val['need']))) $val['need'] = false; return $val; }, $$column), function($val) { return isset($val['name'], $val['text']) && is_string($val['name']) && is_string($val['text']) && $val['name'] !== '' && $val['text'] !== ''; }));
+      $$column = array_values(array_filter(array_map(function($val) { if (!(isset($val['must']) && is_bool($val['must']))) $val['must'] = false; return $val; }, $$column), function($val) { return isset($val['name'], $val['text']) && is_string($val['name']) && is_string($val['text']) && $val['name'] !== '' && $val['text'] !== ''; }));
   }
 
   private static function setCRUDFocus(&$column1s, &$column2s) {
@@ -61,7 +61,7 @@ class Layout {
     return array_values(array_filter(array_map(function($column) {
       return count($tmp = array_values(array_filter(array_unique(preg_split('/:/', is_string($column) ? $column : '')), function($t) {
         return $t !== '';
-      }))) == 1 ? ['name' => $tmp[0], 'text' => $tmp[0], 'need' => true] : ['name' => $tmp[0], 'text' => $tmp[1], 'need' => true];
+      }))) == 1 ? ['name' => $tmp[0], 'text' => $tmp[0], 'must' => true] : ['name' => $tmp[0], 'text' => $tmp[1], 'must' => true];
     }, $columns)));
   }
 

@@ -2,135 +2,291 @@
 
 Load::systemFunc('Format.php');
 
-class ValidatorContainer {
-  private $params = null, $closure = null, $validators = [];
-
-  public function __construct(&$params, $closure) {
-    $this->params =& $params;
-    $this->closure = $closure;
-  }
-
-  public function &params() {
-    return $this->params;
-  }
-
-  public function run() {
-    if (is_callable($closure = $this->closure))
-      $closure();
-
-    foreach ($this->validators as $validator)
-      $validator->run($this->params);
-
-    return $this;
-  }
-
-  public function appendValidator(Validator $validator) {
-    array_push($this->validators, $validator);
-    return $this;
-  }
-
-  public static function create($params, $closure) {
-    $static = new static($params, $closure);
-    $static->run();
-    return $static->params();
-  }
-}
-
 class Validator {
-  public static function maybe(string $name = null, string $title = null, int $code = null) { return new static(false, $name, $title); }
-  public static function need(string $name = null, string $title = null, int $code = null) { return new static(true, $name, $title); }
-  public static function get($closure) { return ValidatorContainer::create(Input::get(), $closure); }
-  public static function post($closure) { return ValidatorContainer::create(Input::post(), $closure); }
-  public static function file($closure) { return ValidatorContainer::create(Input::file(), $closure); }
-  public static function params($params, $closure) { return ValidatorContainer::create($params, $closure); }
+  public static function must(Array &$params, String $key, String $title = null, int $code = 400) {
+    return new Validator(true, $params, $key, $title, $code);
+  }
+
+  public static function optional(Array &$params, String $key, String $title = null, int $code = 400) {
+    return new Validator(false, $params, $key, $title, $code);
+  }
+
+  private $code = 400,
+          $mustCheck = null,
+          $key = null,
+          $params = null,
+          $title = null;
+
+  public function __construct(bool $mustCheck, Array &$params, String $key, String $title = null, int $code = 400) {
+
+    $this->code($code)
+         ->setMustCheck($mustCheck)
+         ->setParams($params)
+         ->setKey($key)
+         ->setTitle($title ?? $key);
+
+    if ($this->mustCheck)
+      array_key_exists($this->key, $params)
+        || $this->error('需必填！');
+    else
+      array_key_exists($this->key, $params)
+        && $this->setMustCheck(true);
+  }
+
+  public function code(int $code) {
+    $this->code  = $code; 
+    return $this;
+  }
+
+  public function setMustCheck(bool $mustCheck) {
+    $this->mustCheck = $mustCheck;
+    return $this;
+  }
   
-  public function isNum() { array_push($this->methods, ['isNum']); return $this; }
-  public function isInt() { array_push($this->methods, ['isInt']); return $this; }
-  public function isStr() { array_push($this->methods, ['isStr']); return $this; }
-  public function isArr() { array_push($this->methods, ['isArr']); return $this; }
-  public function isNumber(int $min = null, int $max = null) { array_push($this->methods, ['isNumber', $min, $max]); return $this; }
-  public function integer(int $min = null, int $max = null) { array_push($this->methods, ['integer', $min, $max]); return $this; }
-  public function isString(int $minLength = 0, int $maxLength = null) { array_push($this->methods, ['isString', $minLength, $maxLength]); return $this; }
-  public function isArray(int $minLength = 0, int $maxLength = null) { array_push($this->methods, ['isArray', $minLength, $maxLength]); return $this; }
-  public function isDate() { array_push($this->methods, ['isDate']); return $this; }
-  public function isDatetime() { array_push($this->methods, ['isDatetime']); return $this; }
-  public function isUrl(int $maxLength = null) { array_push($this->methods, ['isUrl', $maxLength]); return $this; }
-  public function isEmail(int $maxLength = null) { array_push($this->methods, ['isEmail', $maxLength]); return $this; }
-  public function allowableTags($allowableTags = null) { $this->allowableTags = $allowableTags; return $this; }
-  public function isId() { array_push($this->methods, ['integer', 0]); return $this; }
-  public function isLat() { array_push($this->methods, ['isNumber', -90, 90]); return $this; }
-  public function isLng() { array_push($this->methods, ['isNumber', -180, 180]); return $this; }
-  public function inEnum(array $enums = []) { array_push($this->methods, ['inEnum', $enums]); return $this; }
-  public function map($closure = null) { array_push($this->methods, ['map', $closure]); return $this; }
-  public function filter($closure = null) { array_push($this->methods, ['filter', $closure]); return $this; }
-  public function isUpload(int $sizeMin = null, int $sizeMax = null) { array_push($this->methods, ['isUpload', $sizeMin, $sizeMax]); return $this; }
-  public function formatFilter(array $formats = []) { array_push($this->methods, ['formatFilter', $formats]); return $this; }
+  public function setParams(Array &$params) {
+    $this->params =& $params;
+    return $this;
+  }
+  
+  public function setKey(String $key) {
+    $this->key = $key;
+    return $this;
+  }
+  
+  public function setTitle(String $title) {
+    $this->title = $title;
+    return $this;
+  }
+  
+  public function default($default) {
+    if ($this->mustCheck)
+      return $this;
 
-  private $need = true, $name = null, $title = null, $default = null, $code = 400, $methods = [], $allowableTags = null;
+    if (array_key_exists($this->key, $this->params))
+      return $this;
 
-  public function __construct(bool $need, string $name = null, string $title = null, int $code = null) {
-    $traces = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT);
+    $this->params[$this->key] = $default;
+    return $this->setMustCheck(true);
+  }
+
+  private function error($message) {
+    return error($this->code, '「' . $this->title . '」' . $message . '！');
+  }
+
+  public function isStr() {
+    return $this->mustCheck && !is_string($this->params[$this->key])
+      ? $this->error('必須是「字串」格式')
+      : $this;
+  }
+
+  public function strTrim($mask = " \t\n\r\0\x0B") {
+    if ($this->mustCheck)
+      $this->params[$this->key] = trim($this->params[$this->key], $mask);
+    return $this;
+  }
+
+  public function allowableTags($allowableTags = null) {
+    $this->mustCheck
+      ? $this->isStr() && $this->strStripTags($allowableTags)
+      : $this;
+    return $this;
+  }
+
+  public function strStripTags($allowableTags = null) {
+    if ($this->mustCheck && $allowableTags !== false)
+      $this->params[$this->key] = $allowableTags !== null
+        ? strip_tags($this->params[$this->key], $allowableTags)
+        : strip_tags($this->params[$this->key]);
+    return $this;
+  }
+
+  public function strMinLength(int $lenght = null) {
+    return $this->mustCheck && isset($lenght) && $lenght >= 0 && mb_strlen($this->params[$this->key]) < $lenght
+      ? $this->error('長度最短需要 ' . $lenght . ' 個字')
+      : $this;
+  }
+
+  public function strMaxLength(int $lenght = null) {
+    return $this->mustCheck && isset($lenght) && $lenght >= 0 && mb_strlen($this->params[$this->key]) > $lenght
+    ? $this->error('長度最長只能 ' . $lenght . ' 個字')
+    : $this;
+  }
+  
+  public function isNum() {
+    if ($this->mustCheck && !is_numeric($this->params[$this->key]))
+      return $this->error('必須是「數字」格式');
+    $this->params[$this->key] += 0;
+    return $this;
+  }
+
+  public function isInt() {
+    return $this->mustCheck && $this->isNum() && !is_int($this->params[$this->key])
+      ? $this->error('必須是「整數」格式')
+      : $this;
+  }
+
+  public function lessEqual(int $num = null) {
+    return $this->mustCheck && isset($num) && $this->params[$this->key] > $num
+      ? $this->error('需要小於等於「' . $num . '」')
+      : $this;
+  }
+
+  public function less(int $num = null) {
+    return $this->mustCheck && isset($num) && $this->params[$this->key] >= $num
+      ? $this->error('需要小於「' . $num . '」')
+      : $this;
+  }
+
+  public function greaterEqual(int $num = null) {
+    return $this->mustCheck && isset($num) && $this->params[$this->key] < $num
+      ? $this->error('需要大於等於「' . $num . '」')
+      : $this;
+  }
+
+  public function greater(int $num = null) {
+    return $this->mustCheck && isset($num) && $this->params[$this->key] <= $num
+      ? $this->error('需要大於「' . $num . '」')
+      : $this;
+  }
+  
+  public function isArr() {
+    return $this->mustCheck && !is_array($this->params[$this->key])
+      ? $this->error('必須是「陣列」格式')
+      : $this;
+  }
+
+  public function arrMinLength(int $lenght = null) {
+    return $this->mustCheck && isset($lenght) && count($this->params[$this->key]) < $lenght
+      ? $this->error('最少需要「' . $lenght . '」個')
+      : $this;
+  }
+
+  public function arrMaxLength(int $lenght = null) {
+    return $this->mustCheck && isset($lenght) && count($this->params[$this->key]) > $lenght
+      ? $this->error('最多只能「' . $lenght . '」個')
+      : $this;
+  }
+
+  public function map($closure = null) {
+    $this->mustCheck && is_callable($closure) && $this->params[$this->key] = array_map($closure, $this->params[$this->key]);
+    return $this;
+  }
+
+  public function filter($closure = null) {
+    if (!$this->mustCheck)
+      return $this;
+    else if (!isset($closure))
+      $this->params[$this->key] = array_filter($this->params[$this->key]);
+    else if (is_callable($closure))
+      $this->params[$this->key] = array_filter($this->params[$this->key], $closure);
+    else if (is_array($closure))
+      $this->params[$this->key] = array_filter($this->params[$this->key], function($e) use ($closure) { foreach ($closure as $enum) if ($enum === $e)  return true; return false; });
     
-    foreach ($traces as $trace)
-      if (isset($trace['object']) && $trace['object'] instanceof ValidatorContainer && method_exists($trace['object'], 'appendValidator') && $trace['object']->appendValidator($this))
-        break;
-
-    $this->isNeed($need);
-    $name && $this->name($name);
-    $title && $this->title($title);
-    $code && $this->code($code);
+    return $this;
   }
 
-  public function isNeed(bool $need) {   $this->need  = $need;      return $this; }
-  public function name(string $name) {   $this->name  = $name;      return $this; }
-  public function title(string $title) { $this->title = $title;     return $this; }
-  public function default($default) {    $this->default = $default; return $this; }
-  public function code(int $code) { $this->code  = $code;  return $this; }
-  // public function allowableTags() { return $this->allowableTags; }
-
-  public function run(&$params) {
-    if (!is_string($this->name)) return;
-    is_string($this->title) || $this->title = $this->name;
-    if ($this->need) if (!array_key_exists($this->name, $params)) error($this->code, '「' . $this->title . '」需必填！');
-    if (!$this->need) if (!array_key_exists($this->name, $params)) if ($this->default !== null) $params[$this->name] = $this->default;
-    if ($this->need || (array_key_exists($this->name, $params) && $params[$this->name] !== $this->default)) foreach ($this->methods as $method) if ($error = call_user_func_array(['static', '_' . array_shift($method)], array_merge([&$params[$this->name], $this], $method))) error($this->code, '「' . $this->title . '」' . $error);
+  public function sizeMin(int $size = null) {
+    return $this->mustCheck && isset($size) && $this->params[$this->key]['size'] < $size
+      ? $this->error('檔案最少需要「' . implode(' ', memoryUnit($size)) . '」')
+      : $this;
   }
 
+  public function sizeMax(int $size = null) {
+    return $this->mustCheck && isset($size) && $this->params[$this->key]['size'] > $size
+      ? $this->error('檔案最大只能「' . implode(' ', memoryUnit($size)) . '」')
+      : $this;
+  }
 
-  private static function _isStr(&$param, Validator $validator) { return is_string($param) ? null : '不是字串！'; }
-  private static function _isNum(&$param, Validator $validator) { if (!is_numeric($param)) return '不是數字！'; $param = $param + 0; return null; }
-  private static function _isInt(&$param, Validator $validator) { if ($error = self::_isNum($param, $validator)) return $error; if (!is_int($param)) return '不是整數！'; return null; }
-  private static function _isArr(&$param, Validator $validator) { return is_array($param) ? null : '不是陣列！'; }
-  private static function _isNumber(&$param, Validator $validator, int $min = null, int $max = null) { if ($error = self::_isNum($param, $validator)) return $error; if ($min !== null) if ($error = self::_greaterEqual($param, $validator, $min)) return $error; if ($max !== null) if ($error = self::_lessEqual($param, $validator, $max)) return $error; return null; }
-  private static function _integer(&$param, Validator $validator, int $min = null, int $max = null) { if ($error = self::_isInt($param, $validator)) return $error; if ($min !== null) if ($error = self::_greaterEqual($param, $validator, $min)) return $error; if ($max !== null) if ($error = self::_lessEqual($param, $validator, $max)) return $error; return null; }
-  private static function _isString(&$param, Validator $validator, int $minLength = 0, int $maxLength = null) { if ($error = self::_isStr($param, $validator)) return $error; self::_strTrim($param, $validator); self::_strStripTags($param, $validator); if ($minLength >= 0) if ($error = self::_strMinLength($param, $validator, $minLength)) return $error; if ($maxLength !== null && $maxLength >= 0) if ($error = self::_strMaxLength($param, $validator, $maxLength)) return $error; return null; }
-  private static function _isArray(&$param, Validator $validator, int $minLength = 0, int $maxLength = null) { if ($error = self::_isArr($param, $validator)) return $error; if ($minLength >= 0) if ($error = self::_arrMinLength($param, $validator, $minLength)) return $error; if ($maxLength !== null && $maxLength >= 0) if ($error = self::_arrMaxLength($param, $validator, $maxLength)) return $error; return null; }
+  public function formatFilter(array $formats = []) {
+    return $this->mustCheck && $formats && !uploadFileInFormats($this->params[$this->key], $formats)
+      ? $this->error('檔案格式不符合')
+      : $this;
+  }
 
-  private static function _lessEqual(&$param, Validator $validator, $num) { return $param <= $num ? null : '需要小於等於 ' . $num . '！'; }
-  private static function _less(&$param, Validator $validator, $num) { return $param < $num ? null : '需要小於 ' . $num . '！'; }
-  private static function _greaterEqual(&$param, Validator $validator, $num) { return $param >= $num ? null : '需要大於等於 ' . $num . '！'; }
-  private static function _greater(&$param, Validator $validator, $num) { return $param > $num ? null : '需要大於 ' . $num . '！'; }
+  public function isString(int $minLength = 0, int $maxLength = null) {
+    return $this->mustCheck
+      ? $this->isStr()->strTrim()->strStripTags()->strMinLength($minLength)->strMaxLength($maxLength)
+      : $this;
+  }
+
+  public function isNumber(int $min = null, int $max = null) {
+    return $this->mustCheck
+      ? $this->isNum()->greaterEqual($min)->lessEqual($max)
+      : $this;
+  }
+
+  public function isInteger(int $min = null, int $max = null) {
+    return $this->mustCheck
+      ? $this->isInt()->greaterEqual($min)->lessEqual($max)
+      : $this;
+  }
+
+  public function isArray(int $minLength = 0, int $maxLength = null) {
+    return $this->mustCheck
+      ? $this->isArr()->arrMinLength($minLength)->arrMaxLength($maxLength)
+      : $this;
+  }
   
-  private static function _strTrim(&$param, Validator $validator, $mask = " \t\n\r\0\x0B") { $param = trim($param, $mask); return null; }
-  private static function _strStripTags(&$param, Validator $validator, $allowableTags = null) { if ($validator->allowableTags !== false) $param = $allowableTags !== null ? strip_tags($param, $allowableTags) : strip_tags($param); return null; }
-  private static function _strMinLength(&$param, Validator $validator, $lenght) { return mb_strlen($param) >= $lenght ? null : '長度最短需要 ' . $lenght . ' 個字！'; }
-  private static function _strMaxLength(&$param, Validator $validator, $lenght) { return mb_strlen($param) <= $lenght ? null : '長度最長只能 ' . $lenght . ' 個字！'; }
-  
-  private static function _arrMinLength(&$param, Validator $validator, $lenght) { return count($param) >= $lenght ? null : '最少需要 ' . $lenght . ' 個！'; }
-  private static function _arrMaxLength(&$param, Validator $validator, $lenght) { return count($param) <= $lenght ? null : '最多只能 ' . $lenght . ' 個！'; }
-  
-  private static function _isUrl(&$param, Validator $validator, int $maxLength = null) { if ($error = self::_isString($param, $validator, 0, $maxLength)) return $error; return isUrl($param) ? null : '須為網址(http、https)格式！'; }
-  private static function _isEmail(&$param, Validator $validator, int $maxLength = null) { if ($error = self::_isString($param, $validator, 0, $maxLength)) return $error; return isEmail($param) ? null : '須為電子郵件(E-Mail)格式！'; }
-  private static function _isDate(&$param, Validator $validator) { if ($error = self::_isString($param, $validator, 0, $maxLength)) return $error; return isDate($param) ? null : '不符合 Date 格式！'; }
-  private static function _isDatetime(&$param, Validator $validator) { if ($error = self::_isString($param, $validator, 0, $maxLength)) return $error; return isDatetime($param) ? null : '不符合 Date 格式！'; }
+  public function isDate() {
+    return $this->mustCheck && $this->isString(10, 10) && !isDate($this->params[$this->key])
+      ? $this->error('必須是「Date」格式')
+      : $this;
+  }
 
-  private static function _inEnum(&$param, Validator $validator, array $enums = []) { if ($error = self::_isString($param, $validator)) return $error; foreach ($enums as $enum) if ($enum === $param) return null; return '不存在選項中！'; }
-  private static function _map(&$param, Validator $validator, $closure = null) { if (!is_array($param)) return null; is_callable($closure) && $param = array_map($closure, $param); }
-  private static function _filter(&$param, Validator $validator, $closure = null) { if (!is_array($param)) return null; $closure === null && $param = array_filter($param); is_callable($closure) && $param = array_filter($param, $closure); is_array($closure) && $param = array_filter($param, function($e) use ($closure) { foreach ($closure as $enum) if ($enum === $e) return true; return false; }); }
+  public function isDatetime() {
+    return $this->mustCheck && $this->isString(19, 19) && !isDatetime($this->params[$this->key])
+      ? $this->error('必須是「Datetime」格式')
+      : $this;
+  }
 
-  private static function _formatFilter(&$param, Validator $validator, array $formats = []) { if ($error = self::_isUpload($param, $validator)) return $error; return uploadFileInFormats($param, $formats) ? null : '格式不符！'; }
-  private static function _isUpload(&$param, Validator $validator, int $min = null, int $max = null) { if ($error = self::_isArray($param, $validator, 5, 5)) return $error; if (!isUploadFile($param)) return '檔案格式錯誤！'; if ($min !== null) if ($error = self::_sizeMin($param, $validator, $min)) return $error; if ($max !== null) if ($error = self::_sizeMax($param, $validator, $max)) return $error; return null; }
+  public function isUrl() {
+    return $this->mustCheck && $this->isString(19, 19) && !isUrl($this->params[$this->key])
+      ? $this->error('必須是「網址(http、https)」格式')
+      : $this;
+  }
 
-  private static function _sizeMin(&$param, Validator $validator, $size) { return $param['size'] >= $size ? null : '檔案最少需要 ' . implode(' ', memoryUnit($size)) . '！'; }
-  private static function _sizeMax(&$param, Validator $validator, $size) { return $param['size'] <= $size ? null : '檔案最大只能 ' . implode(' ', memoryUnit($size)) . '！'; }
+  public function isEmail() {
+    return $this->mustCheck && $this->isString(19, 19) && !isEmail($this->params[$this->key])
+      ? $this->error('必須是「E-mail」格式')
+      : $this;
+  }
+
+  public function isId() {
+    return $this->mustCheck
+    ? $this->isInteger(0)
+    : $this;
+  }
+
+  public function isLat() {
+    return $this->mustCheck
+    ? $this->isNumber(-90, 90)
+    : $this;
+  }
+
+  public function isLng() {
+    return $this->mustCheck
+    ? $this->isNumber(-180, 180)
+    : $this;
+  }
+
+  public function inEnum(array $enums = []) {
+    if (!($this->mustCheck && $enums))
+      return $this;
+
+    $this->isString();
+
+    foreach ($enums as $enum)
+      if ($enum === $this->params[$this->key])
+        return $this;
+
+    return $this->error('不存在允許的選項內！');
+  }
+
+  public function isUpload(int $sizeMin = 0, int $sizeMax = null) {
+    return $this->mustCheck
+      ? $this->isArray(5, 5) && isUploadFile($this->params[$this->key])
+        ? $this->sizeMin($sizeMin)->sizeMax($sizeMax)
+        : $this->error('必須是「上傳檔案」的格式')
+      : $this;
+  }
 }
