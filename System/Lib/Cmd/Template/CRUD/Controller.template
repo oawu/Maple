@@ -12,7 +12,7 @@ class <?php echo $controllerName;?> extends AdminController {
 
     ifErrorTo('Admin<?php echo $parentControllerName;?>Index');
 
-    $this->methedIn(function() {
+    $this->methodIn(function() {
       return $this->parent = <?php echo $parentModelName;?>::one('id = ?', Router::param('<?php echo $parentModelFkey;?>'));
     });
 
@@ -21,7 +21,7 @@ class <?php echo $controllerName;?> extends AdminController {
 
     ifErrorTo('Admin<?php echo $controllerName;?>Index');
 
-    $this->methedIn('edit', 'update', 'delete', 'show'<?php echo $enable ? ", 'enable'" : '';?>, function() {
+    $this->methodIn('edit', 'update', 'delete', 'show'<?php echo $enable ? ", 'enable'" : '';?>, function() {
       return $this->obj = <?php echo $modelName;?>::one('id = ?', Router::param('id'));
     });
 
@@ -72,12 +72,12 @@ class <?php echo $controllerName;?> extends AdminController {
 <?php }
       if ($texts) {
         foreach ($texts as $text) { ?>
-      Validator::<?php echo $text['must'] ? 'must' : 'optional';?>($params, '<?php echo $text['name'];?>', '<?php echo $text['text'];?>')->isString(<?php echo $text['must'] ? '1' : '0';?>, 190);
+      <?php echo $text;?>
 <?php   }
       }
       if ($textareas) {
         foreach ($textareas as $textarea) { ?>
-      Validator::<?php echo $textarea['must'] ? 'must' : 'optional';?>($params, '<?php echo $textarea['name'];?>', '<?php echo $textarea['text'];?>')<?php echo isset($textarea['type']) && $textarea['type'] == 'ckeditor' ? '->allowableTags(false)->strMinLength(' . ($textarea['must'] ? '1' : '0') . ')' : ('->isString(' . ($textarea['must'] ? '1' : '0') . ')');?>;
+      <?php echo $textarea;?>
 <?php   }
       }
       if ($sort) {
@@ -132,12 +132,12 @@ class <?php echo $controllerName;?> extends AdminController {
 <?php }
       if ($texts) {
         foreach ($texts as $text) { ?>
-      Validator::<?php echo $text['must'] ? 'must' : 'optional';?>($params, '<?php echo $text['name'];?>', '<?php echo $text['text'];?>')->isString(<?php echo $text['must'] ? '1' : '0';?>, 190);
+      <?php echo $text;?>
 <?php   }
       }
       if ($textareas) {
         foreach ($textareas as $textarea) { ?>
-      Validator::<?php echo $textarea['must'] ? 'must' : 'optional';?>($params, '<?php echo $textarea['name'];?>', '<?php echo $textarea['text'];?>')<?php echo isset($textarea['type']) && $textarea['type'] == 'ckeditor' ? '->allowableTags(false)->strMinLength(' . ($textarea['must'] ? '1' : '0') . ')' : ('->isString(' . ($textarea['must'] ? '1' : '0') . ')');?>;
+      <?php echo $textarea;?>
 <?php   }
       } ?>
       return $params;

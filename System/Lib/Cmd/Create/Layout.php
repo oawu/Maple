@@ -319,8 +319,7 @@ class Layout {
         $texts,
         $textareas,
         $enable,
-        $sort,
-      );
+        $sort);
   }
   
   public static function createNestedCRUD() {
@@ -403,8 +402,26 @@ class Layout {
       'modelName' => $modelName,
       'controllerName' => $controllerName,
       'images' => $images,
-      'texts' => $texts,
-      'textareas' => $textareas,
+      'texts' => array_map(function($text) {
+        $validator = '';
+
+        switch ($text['type'] ?? 'text') {
+          case 'number': $validator = '->isNumber()'; break;
+          case 'email': $validator = '->isEmail()'; break;
+          case 'date': $validator = '->isDate()'; break;
+          default: $validator = '->isString(' . ($text['must'] ? '1' : '0') . ')'; break;
+        }
+
+        return 'Validator::' . ($text['must'] ? 'must' : 'optional') . "(" . '$params' . ", '" . $text['name'] . "', '" . $text['text'] . "')" . $validator . ";\n";
+      }, $texts),
+      'textareas' => array_map(function($textarea) {
+        $validator = '';
+        switch ($textarea['type'] ?? 'pure') {
+          case 'ckeditor': $validator = '->isStr()->strTrim()->allowableTags(false)->strMinLength(' . ($textarea['must'] ? '1' : '0') . ')'; break;
+          default: $validator = '->isString(' . ($textarea['must'] ? '1' : '0') . ')'; break;
+        }
+        return 'Validator::' . ($textarea['must'] ? 'must' : 'optional') . "(" . '$params' . ", '" . $textarea['name'] . "', '" . $textarea['text'] . "')" . $validator . ";\n";
+      }, $textareas),
       'enable' => $enable,
       'sort' => $sort,
       'hasParent' => $hasParent,

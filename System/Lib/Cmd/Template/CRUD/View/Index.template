@@ -28,10 +28,17 @@ echo $table->search(function() {
           ->sql('enable IN (?)');
 <?php }
       if ($texts) {
-        foreach ($texts as $text) { ?>
+        foreach ($texts as $text) {
+          $type = $text['type'] ?? '';
+          $type = $type != 'date'
+            ? $type == 'number'
+              ? "->type('number')\n       "
+              : ""
+            : "->type('date')\n       ";
+          ?>
 
   Input::create('<?php echo $text['text'];?>')
-       ->sql('<?php echo $text['name'];?> LIKE ?');
+       <?php echo $type;?>->sql('<?php echo $text['name'];?> LIKE ?');
 <?php   }
       }
       if ($textareas) {
