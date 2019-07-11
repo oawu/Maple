@@ -409,7 +409,7 @@ class Layout {
           case 'number': $validator = '->isNumber()'; break;
           case 'email': $validator = '->isEmail()'; break;
           case 'date': $validator = '->isDate()'; break;
-          default: $validator = '->isString(' . ($text['must'] ? '1' : '0') . ')'; break;
+          default: $validator = '->isString(' . ($text['must'] ? '1' : '0') . ', 190)'; break;
         }
 
         return 'Validator::' . ($text['must'] ? 'must' : 'optional') . "(" . '$params' . ", '" . $text['name'] . "', '" . $text['text'] . "')" . $validator . ";\n";

@@ -90,8 +90,8 @@ class <?php echo $controllerName;?> extends AdminController {
       } ?>
       return $params;
     });
-
 <?php if ($images) { ?>
+
     $files = Input::ValidFile(function($files) {
 <?php   foreach ($images as $image) { ?>
       Validator::<?php echo $image['must'] ? 'must' : 'optional';?>($files, '<?php echo $image['name'];?>', '<?php echo $image['text'];?>')->isUpload()<?php echo empty($image['formats']) ? '' : "->formatFilter([" . implode(', ', array_map(function($format) { return "'" . $format . "'";}, $image['formats'])) . "])";?>;
@@ -142,8 +142,8 @@ class <?php echo $controllerName;?> extends AdminController {
       } ?>
       return $params;
     });
-
 <?php if ($images) { ?>
+
     $files = Input::ValidFile(function($files) {
 <?php   foreach ($images as $image) { ?>
       Validator::optional($files, '<?php echo $image['name'];?>', '<?php echo $image['text'];?>')->isUpload()<?php echo empty($image['formats']) ? '' : "->formatFilter([" . implode(', ', array_map(function($format) { return "'" . $format . "'";}, $image['formats'])) . "])";?>;
