@@ -22,12 +22,12 @@
 
 * MacOS
   * 下載 `curl -LO https://comdan66.github.io/Maple/maple7`
-  * 搬移 `mv maple /usr/local/bin/maple7`
+  * 搬移 `mv maple7 /usr/local/bin/maple7`
   * 權限 `chmod +x /usr/local/bin/maple7`
 
 * ubuntu
   * 下載 `curl -LO https://comdan66.github.io/Maple/maple7`
-  * 搬移 `sudo mv maple /usr/local/bin/maple7`
+  * 搬移 `sudo mv maple7 /usr/local/bin/maple7`
   * 權限 `sudo chmod +x /usr/local/bin/maple7`
 
 ## 初始化專案
