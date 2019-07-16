@@ -83,8 +83,14 @@ class Layout {
   }
 
   public static function get() {
-    if (!(\Load::system('Env') && \Load::systemLib('Migration')))
+    if (!\Load::system('Env'))
       return null;
+
+    try {
+      \Load::systemLib('Migration');
+    } catch (\Exception $e) {
+      return null;
+    }
 
     $item1 = Check::create('更新至最新版', 'Update to the latest version')
                   ->appendTip('Migration 將會更新至' . \Xterm::gray('最新版本', true) . '。')

@@ -28,6 +28,14 @@ class Migration {
     if (!class_exists($modelName))
       eval("class " . $modelName . " extends M\Model {}");
 
+    try {
+      $textConnection = new \_M\Connection();
+    } catch (\PDOException $e) {
+      throw new Exception('PDO 連線錯誤！');
+    }
+
+    $textConnection = null;
+
     $sth = null;
     if ($error = \_M\Connection::instance()->query('SHOW TABLES LIKE ?;', [$modelName], $sth))
       gg('連接 MySQL 失敗！', $error);

@@ -33,7 +33,7 @@ class Connection extends \PDO {
     }
   }
   
-  protected function __construct() {
+  public function __construct() {
     $config = \config('Database');
 
     foreach (['hostname', 'username', 'password', 'database', 'encoding'] as $key)
