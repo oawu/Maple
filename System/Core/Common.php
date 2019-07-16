@@ -225,6 +225,24 @@ if (!function_exists('memoryUnit')) {
     return [@round($s / pow(1024, ($i = floor(log($s, 1024)))), 2), $u[$i]];
   }
 }
+if (!function_exists('timeago')) {
+  function timeago($now) {
+    $day = time() - $now;
+    $units = [['b' => 10, 'f' => '現在'],
+             ['b' => 6, 'f' => '不到 1 分鐘'],
+             ['b' => 60, 'f' => ' 分鐘前'],
+             ['b' => 24, 'f' => ' 小時前'],
+             ['b' => 30, 'f' => ' 天前'],
+             ['b' => 12, 'f' => ' 個月前']];
+    $unit = 1;
+    for ($i = 0, $c = count($units); $i < $c; $i++, $unit = $tmp) {
+      $tmp = $units[$i]['b'] * $unit;
+      if ($day < $tmp)
+        return [($i > 1 ? round($day / $unit) : ''), $units[$i]['f']];
+    }
+    return [round($day / $unit), ' 年前'];
+  }
+}
 
 if (!function_exists('transaction')) {
   function transaction($closure, $code = 400) {
@@ -240,7 +258,7 @@ if (!function_exists('items')) {
 }
 
 if (!function_exists('minText')) {
-  function minText($text, $length = 100) {
+  function minText($text, $length = 200) {
     return $length ? mb_strimwidth(strip_tags($text), 0, $length, '…','UTF-8') : strip_tags($text);
   }
 }
