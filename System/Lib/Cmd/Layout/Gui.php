@@ -15,11 +15,11 @@ class Gui {
 
     switch ($feature) {
       case 'init':      return $init->choice();      break;
-      case 'create':    return $create->choice();    break;
-      case 'migration': return $migration->choice(); break;
-      case 'clean':     return $clean->choice();     break;
-      case 'deploy':    return $deploy->choice();    break;
       default:          return $main->choice();      break;
+      case 'create':    return $migration ? $create->choice() : $main->choice();    break;
+      case 'migration': return $migration ? $migration->choice() : $main->choice(); break;
+      case 'clean':     return $clean     ? $clean->choice() : $main->choice();     break;
+      case 'deploy':    return $deploy    ? $deploy->choice() : $main->choice();    break;
     }
   }
 }
