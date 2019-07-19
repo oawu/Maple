@@ -34,7 +34,7 @@ class Router {
     
     $this->class = pathinfo($this->path, PATHINFO_BASENAME);
     $this->path  = pathinfo($this->path, PATHINFO_DIRNAME);
-    $this->path  = $this->dirs['dir'] . ($this->path === '.' ? '' : $this->path . '/');
+    $this->path  = $this->dirs['prefix'] . DIRECTORY_SEPARATOR . ($this->path === '.' ? '' : $this->path . DIRECTORY_SEPARATOR);
 
     return $this->name(ucfirst($this->class) . ucfirst($this->method));
   }
@@ -74,7 +74,7 @@ class Router {
   private static function getDirs() {
     $dirs = array_filter(array_map(function($trace) {
       return isset($trace['class']) && ($trace['class'] == 'Router') && isset($trace['function']) && ($trace['function'] == 'dir') && isset($trace['type']) && ($trace['type'] == '::') && isset($trace['args'][0], $trace['args'][1])
-        ? ['dir' => trim($trace['args'][0], '/') . '/', 'prefix' => is_string($trace['args'][1]) ? $trace['args'][1] : '']
+        ? ['dir' => trim($trace['args'][0], '/') . '/', 'prefix' => trim($trace['args'][1], DIRECTORY_SEPARATOR)]
         : null;
     }, debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT)));
 
@@ -127,7 +127,7 @@ class Router {
   public static function dir($dir, $prefix, $closure = null) {
     if (is_callable($prefix)) {
       $closure = $prefix;
-      $prefix = '';
+      $prefix = ucfirst($dir);
     }
     return $closure();
   }

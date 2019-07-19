@@ -80,6 +80,9 @@ return [
     // `userId`    int(11) unsigned NOT NULL COMMENT 'User ID',
     // `userId`    int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'User ID',
 
+  # 整數
+    // `sort`      int(11) unsigned NOT NULL DEFAULT 0 COMMENT '排序 DESC',
+
   # 字串
     // `cover`     varchar(50)  COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '封面',
     // `title`     varchar(190) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '標題',

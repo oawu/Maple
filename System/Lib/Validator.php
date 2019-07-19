@@ -66,7 +66,7 @@ class Validator {
       return $this;
 
     $this->params[$this->key] = $default;
-    return $this->setMustCheck(true);
+    return $this->setMustCheck(false);
   }
 
   private function error($message) {
@@ -240,13 +240,13 @@ class Validator {
   }
 
   public function isUrl() {
-    return $this->mustCheck && $this->isString(19, 19) && !isUrl($this->params[$this->key])
+    return $this->mustCheck && $this->isString() && !isUrl($this->params[$this->key])
       ? $this->error('必須是「網址(http、https)」格式')
       : $this;
   }
 
   public function isEmail() {
-    return $this->mustCheck && $this->isString(19, 19) && !isEmail($this->params[$this->key])
+    return $this->mustCheck && $this->isString() && !isEmail($this->params[$this->key])
       ? $this->error('必須是「E-mail」格式')
       : $this;
   }
