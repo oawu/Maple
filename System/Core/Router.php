@@ -34,7 +34,7 @@ class Router {
     
     $this->class = pathinfo($this->path, PATHINFO_BASENAME);
     $this->path  = pathinfo($this->path, PATHINFO_DIRNAME);
-    $this->path  = $this->dirs['prefix'] . DIRECTORY_SEPARATOR . ($this->path === '.' ? '' : $this->path . DIRECTORY_SEPARATOR);
+    $this->path  = ltrim($this->dirs['prefix'] . DIRECTORY_SEPARATOR . ($this->path === '.' ? '' : $this->path . DIRECTORY_SEPARATOR), DIRECTORY_SEPARATOR);
 
     return $this->name(ucfirst($this->class) . ucfirst($this->method));
   }
