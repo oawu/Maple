@@ -85,7 +85,7 @@ if (!function_exists('error')) {
           }
         }
      
-        if (!$params && isset($obj['function'], $obj['class'], $obj['args']) && $obj['class'] == 'Validator' && $obj['function'] == 'post' && $obj['args'][0] instanceof Closure) {
+        if (!$params && isset($obj['function'], $obj['class'], $obj['args']) && $obj['function'] == 'ValidPost' && $obj['args'][0] instanceof Closure) {
           $args = array_merge($args, [Input::post()]);
           $params = true;
           break;
