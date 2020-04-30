@@ -61,6 +61,11 @@ if (!function_exists('\M\relation')) {
 
 if (!function_exists('\M\options')) {
   function options($options) {
+    // Model::find('one', null);
+    is_array($options) && count($options)
+      && $options[0] === null
+      && $options[0] = ['where' => \Where::create('id = ?', null)];
+
     // Model::find('one', 1);
     isset($options[0])
       && is_numeric($options[0])
