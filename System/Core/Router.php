@@ -1,242 +1,218 @@
 <?php
+namespace Router {
+  class Group {
+    private $uri = '';
+    private $dir = '';
+    private $mid = '';
+    private $name = null;
 
-class Router {
-  private $name;
-  private $segment;
-  private $dirs;
-  private $path;
-  private $class;
-  private $method;
-  private static $names;
-  private static $current;
-  private static $requestMethod;
-  private static $params = [];
-  private static $className;
-  private static $methodName;
-  private static $routers;
-  private static $regxPattern = [
-    'id' => '[0-9]+',
-    'any' => '[^/]+',
-    'num' => '-?[0-9](.[0-9]+)?',
-  ];
-
-  public function __construct($segment = null, $dirs = []) {
-    $this->segment = $segment;
-    $this->dirs = $dirs;
-  }
-  
-  public function controller($controller) {
-    $controller = trim($controller, '/');
-
-    strpos($controller, '@') !== false || $controller = $controller . '@' . 'index';
-
-    list($this->path, $this->method) = explode('@', $controller);
-    
-    $this->class = pathinfo($this->path, PATHINFO_BASENAME);
-    $this->path  = pathinfo($this->path, PATHINFO_DIRNAME);
-    $this->path  = ltrim($this->dirs['prefix'] . DIRECTORY_SEPARATOR . ($this->path === '.' ? '' : $this->path . DIRECTORY_SEPARATOR), DIRECTORY_SEPARATOR);
-
-    return $this->name(ucfirst($this->class) . ucfirst($this->method));
-  }
-  
-  public function alias($name) {
-    return $this->name($name);
-  }
-
-  public function name($name = null) {
-    if ($name === null)
-      return $this->name;
-
-    $this->name = $this->dirs['prefix'] . $name;
-    
-    if (isset(self::$names[$this->name]))
-      return self::$names[$this->name];
-
-    return self::$names[$this->name] = $this;
-  }
-  
-  public static function params() {
-    return self::$params;
-  }
-
-  public static function param($key) {
-    return array_key_exists($key, self::$params) ? self::$params[$key] : null;
-  }
-
-  public static function requestMethod() {
-    return self::$requestMethod !== null
-      ? self::$requestMethod
-      : self::$requestMethod = strtolower(isCli()
-        ? 'cli'
-        : ($_POST['_method'] ?? $_SERVER['REQUEST_METHOD'] ?? 'get'));
-  }
-
-  private static function getDirs() {
-    $dirs = array_filter(array_map(function($trace) {
-      return isset($trace['class']) && ($trace['class'] == 'Router') && isset($trace['function']) && ($trace['function'] == 'dir') && isset($trace['type']) && ($trace['type'] == '::') && isset($trace['args'][0], $trace['args'][1])
-        ? ['dir' => trim($trace['args'][0], '/') . '/', 'prefix' => trim($trace['args'][1], DIRECTORY_SEPARATOR)]
-        : null;
-    }, debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT)));
-
-    $dirs = array_shift($dirs);
-    $dirs || $dirs = ['dir' => '', 'prefix' =>''];
-
-    $dirs['prefix'] || $dirs['prefix'] = implode('', array_map(function($t) { return ucfirst($t); }, explode('/', preg_replace ('/[\s_]+/', '/', $dirs['dir']))));
-
-    return $dirs;
-  }
-
-  private static function setSegment($segment) {
-    static $keys, $vals;
-    
-    if ($keys === null || $vals === null) {
-      $keys = array_map(function($t) { return ':' . $t; }, array_keys(self::$regxPattern));
-      $vals = array_map(function($t) { return ':' . $t; }, array_values(self::$regxPattern));
+    public function __construct($options, $items = null) {
+      $this->uri($options['uri'] ?? null);
+      $this->dir($options['dir'] ?? null);
+      $this->mid($options['mid'] ?? null);
+      $this->items($items);
     }
 
-    $segment = trim($segment, '/');
-    $segment = str_replace($keys, $vals, $segment);
-    
-    return preg_replace('/\((\w+?):/', '(?<$1>', $segment);
-  }
+    public function uri($uri = null) {
+      if ($uri === null)
+        return $this->uri;
 
-  public static function __callStatic($name, $args) {
-    if (in_array($name, ['className', 'methodName']))
-      return self::$$name;
-
-    if (!in_array($name = strtolower($name), ['get', 'post', 'put', 'delete', 'del', 'cli']))
-      throw new Exception('Router 不存在「' . $name . '」的 Static 方法！');
-
-    $name == 'del' && $name = 'delete';
-
-    $args || $args = [''];
-    $dirs = self::getDirs();
-    
-    $segment = array_shift($args);
-    $segment = self::setSegment($segment);
-    $segment = trim($dirs['dir'] . $segment, '/');
-    
-    self::$routers[$name] = self::$routers[$name] ?? [];
-    return self::$routers[$name][$segment] = new Router($segment, $dirs);
-  }
-
-  public static function all() {
-    return self::$routers;
-  }
-  
-  public static function dir($dir, $prefix, $closure = null) {
-    if (is_callable($prefix)) {
-      $closure = $prefix;
-      $prefix = ucfirst($dir);
+      $this->uri = $uri ?? '';
+      return $this;
     }
-    return $closure();
-  }
 
-  public static function file($name) {
-    return Load::router($name);
-  }
+    public function mid($mid = null) {
+      if ($mid === null)
+        return $this->mid;
 
-  public static function findByName($name) {
-    if (isset(self::$names[$name]))
-      return self::$names[$name];
+      $this->mid = $mid ?? '';
+      return $this;
+    }
 
-    foreach (self::$routers as $method => $routers)
-      foreach ($routers as $segment => $router)
-        if ($segment === self::setSegment($name) || $router->name() === $name)
-          return $router;
+    public function dir($dir = null) {
+      if ($dir === null)
+        return $this->dir;
 
-    return null;
-  }
+      $this->dir = $dir ?? '';
+      return $this;
+    }
 
-  public function exec() {
-    if (!isset($this->path, $this->class, $this->method))
-      return new GG('迷路惹！', 404);
+    public function name($name = null) {
+      if ($name === null)
+        return $this->name ?? $this->uri;
 
-    if (!Load::controller($this->path . $this->class . '.php'))
-      return Log::warning('載入 Controller Class 失敗！', '載入路徑：' . $this->path . $this->class . '.php') && new GG('迷路惹！', 404);
+      $this->name = $name ?? $this->uri;
+      return $this;
+    }
     
-    if (!class_exists($this->class))
-      return Log::warning('找不到 Controller Class！', '請檢查「' . $this->path . $this->class . '.php」檔案的 Class 名稱是否正確！') && new GG('迷路惹！', 404);
-
-    self::$className = $this->class;
-    self::$methodName = $this->method;
-
-    try {
-      $obj = new $this->class();
-
-      if (method_exists($obj, self::$methodName))
-        return call_user_func_array([$obj, self::$methodName], static::$params);
+    public function items($closure) {
+      if (!is_callable($closure))
+        return $this;
       
-      return new GG('迷路惹！', 404);
-    } catch (ControllerException $e) {
-      Status::$code = $e->getStatusCode();
-      return call_user_func_array('ifError', $e->getMessages());
+      $closure();
+      return $this;
     }
-  }
-
-  public static function current() {
-    if (self::$current !== null)
-      return self::$current ? self::$current : null;
-
-    $method = self::requestMethod();
-    
-    if (!isset(self::$routers[$method]))
-      return self::$current = false;
-
-    foreach (self::$routers[$method] as $segment => $obj) {
-      if (preg_match('#^' . $segment . '$#', implode('/', Url::segments()), $matches)) {
-
-        $params = [];
-        foreach (array_filter(array_keys($matches), 'is_string') as $key)
-          self::$params[$key] = $matches[$key];
-
-        return self::$current = $obj;
-      }
-    }
-
-    return self::$current = false;
-  }
-
-  public function segment($segment = null) {
-    if ($segment === null)
-      return $this->segment;
-
-    $this->segment = $segment;
-    return $this;
-  }
-
-  public function __call($name, $arguments) {
-    if ($name == 'className')
-      return $this->class;
-    
-    if ($name == 'methodName')
-      return $this->method;
-    
-    if ($name == 'path')
-      return $this->path;
-    
-    throw new Exception('Router 不存在「' . $name . '」方法！');
-  }
-  
-  public static function load() {
-    return array_map(function($file) {
-      return !in_array($file, ['.', '..']) ? !is_dir(PATH_ROUTER . $file) ? pathinfo($file, PATHINFO_EXTENSION) == 'php' ? Load::file(PATH_ROUTER . $file) : null : array_map(function($subfile) use ($file) {
-        return pathinfo($subfile, PATHINFO_EXTENSION) == 'php' ? Load::file(PATH_ROUTER . $file . DIRECTORY_SEPARATOR . $subfile) : null;
-      }, @scandir(PATH_ROUTER . $file) ?: []) : null;
-    }, @scandir(PATH_ROUTER) ?: []);
-  }
-  
-  public static function aliasAppendParam($routerName, $param = null) {
-    static $routerNames = [];
-    array_key_exists($routerName, $routerNames) || $routerNames[$routerName] = [];
-    
-    if ($param === null)
-      foreach ($routerNames as $key => $val)
-        if (preg_match_all('/^' . $key . '/', $routerName, $matches))
-          return $val;
-
-    return array_push($routerNames[$routerName], $param);
   }
 }
 
-Router::load();
+namespace {
+  class Router {
+    private $class;
+    private $method;
+    private $name;
+    private $func;
+
+    private $uris = [];
+    private $dirs = [];
+    private $mids = [];
+
+    private $groupNames = [];
+    private $segment = '';
+
+    private static $names = [];
+    private static $routers = [];
+    private static $regxPattern = [
+      'id' => '[0-9]+',
+      'any' => '[^/]+',
+      'num' => '-?[0-9](.[0-9]+)?',
+    ];
+
+    public function __construct($method, $groups, $segment) {
+
+      $this->uris = array_filter(array_map(function($group) { return $group->uri(); }, $groups), function($uri) { return $uri !== ''; });
+      $this->dirs = array_filter(array_map(function($group) { return $group->dir(); }, $groups), function($dir) { return $dir !== ''; });
+      $this->mids = array_filter(array_map(function($group) { return $group->mid(); }, $groups), function($mid) { return $mid !== ''; });
+
+      // echo '<meta http-equiv="Content-type" content="text/html; charset=utf-8" /><pre>';
+      // var_dump($this->mids);
+      // exit();
+
+      $this->groupNames = array_filter(array_map(function($group) { return $group->name(); }, $groups), function($name) { return $name !== ''; });
+      $this->segment = self::setSegment(($this->uris ? implode('/', $this->uris) . '/' : '') . trim($segment, '/'));
+      self::$routers[$method] = self::$routers[$method] ?? [];
+      return self::$routers[$method][$this->segment] = &$this;
+    }
+
+    public function return($func) {
+      $this->func = $func;
+      return $this;
+    }
+
+    public function controller($controller) {
+      $controller = trim($controller, '/');
+      strpos($controller, '@') !== false || $controller = $controller . '@' . 'index';
+      list($path, $this->method) = explode('@', $controller);
+
+      $this->class = pathinfo($path, PATHINFO_BASENAME);
+      $path = pathinfo($path, PATHINFO_DIRNAME);
+      $path === '.' || array_push($this->dirs, $path);
+
+      return $this->name(implode('', array_map('ucfirst', [$this->class, $this->method])));
+    }
+
+    public function name($name = null) {
+      if ($name === null)
+        return $this->name;
+
+      $key = implode('', array_map('ucfirst', array_merge($this->groupNames, [$this->class, $this->method])));
+
+      if (isset(self::$names[$key]))
+        unset(self::$names[$key]);
+
+      return self::$names[$this->name = implode('', array_map('ucfirst', $this->groupNames)) . $name] = &$this;
+    }
+
+    public function alias($name) {
+      return $this->name($name);
+    }
+
+    public function __call($name, $arguments) {
+      if ($name == 'class')
+        return $this->class;
+
+      if ($name == 'method')
+        return $this->method;
+
+      if ($name == 'func')
+        return $this->func;
+
+      if ($name == 'mids')
+        return $this->mids;
+      
+      if ($name == 'path')
+        return implode(DIRECTORY_SEPARATOR, array_merge($this->dirs, [$this->class]));
+      
+      QQ('Router 不存在「' . $name . '」方法！');
+    }
+    
+    public static function group($options, $items = null) {
+      return new \Router\Group($options, $items);
+    }
+
+    public static function init() {
+      return array_map(function($file) {
+        return !in_array($file, ['.', '..'])
+          ? !is_dir($path = PATH_ROUTER . $file)
+            ? pathinfo($file, PATHINFO_EXTENSION) == 'php'
+              ? Load::file(PATH_ROUTER . $file)
+              : null
+            : array_map(function($subfile) use ($path) {
+              return pathinfo($subfile, PATHINFO_EXTENSION) == 'php'
+                ? Load::file($path . DIRECTORY_SEPARATOR . $subfile)
+                : null;
+            }, @scandir($path) ?: [])
+          : null;
+      }, @scandir(PATH_ROUTER) ?: []);
+    }
+
+    private static function setSegment($segment) {
+      static $keys, $vals;
+      
+      if ($keys === null || $vals === null) {
+        $keys = array_map(function($t) { return ':' . $t; }, array_keys(self::$regxPattern));
+        $vals = array_map(function($t) { return ':' . $t; }, array_values(self::$regxPattern));
+      }
+
+      $segment = trim($segment, '/');
+      $segment = str_replace($keys, $vals, $segment);
+      
+      return preg_replace('/\((\w+?):/', '(?<$1>', $segment);
+    }
+
+    public static function __callStatic($name, $args) {
+      $methods = [
+        'cli', 'get', 'post', 'put', 'delete', 'del',
+        'copy', 'head', 'options', 'link', 'unlink', 'purge',
+      ];
+
+      in_array($name = strtolower($name), $methods)
+        || QQ('Router 不存在「' . $name . '」的 Static 方法！');
+
+      $name == 'del' && $name = 'delete';
+      $args || $args = [''];
+
+      $groups = array_reverse(array_map(function($trace) {
+        return $trace['object'];
+      }, array_filter(debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT), function($trace) {
+        return isset($trace['function'], $trace['object']) && $trace['function'] == '__construct' && $trace['object'] instanceof \Router\Group;
+      })));
+
+      return new Router($name, $groups, array_shift($args));
+    }
+
+    public static function clean() {
+      self::$names = null;
+      self::$routers = null;
+      self::$regxPattern = null;
+      return true;
+    }
+
+    public static function &names() {
+      return self::$names;
+    }
+
+    public static function &all() {
+      return self::$routers;
+    }
+  }
+}

@@ -1,0 +1,6 @@
+
+class Main extends Controller {
+  public function index() {
+    return View::create('Main');
+  }
+}

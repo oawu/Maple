@@ -12,7 +12,8 @@ class Security {
   public static function removeInvisibleCharacters($str, $urlEncoded = true) {
     $n = [];
 
-    $urlEncoded && array_push($n, '/%0[0-8bcef]/i', '/%1[0-9a-f]/i', '/%7f/i');
+    $urlEncoded
+      && array_push($n, '/%0[0-8bcef]/i', '/%1[0-9a-f]/i', '/%7f/i');
 
     array_push($n, '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/S');
 
@@ -42,18 +43,23 @@ class Security {
       stream_set_chunk_size($fp, $length);
       $output = fread($fp, $length);
       fclose($fp);
-      
+
       if ($output !== false)
         return $output;
     }
 
-    return function_exists('openssl_random_pseudo_bytes') ? openssl_random_pseudo_bytes($length) : false;
+    return function_exists('openssl_random_pseudo_bytes')
+      ? openssl_random_pseudo_bytes($length)
+      : false;
   }
 
   public static function urldecodespaces($matches) {
     $input = $matches[0];
     $nospaces = preg_replace('#\s+#', '', $input);
-    return $nospaces === $input ? $input : rawurldecode($nospaces);
+
+    return $nospaces === $input
+      ? $input
+      : rawurldecode($nospaces);
   }
 
   public static function convertAttribute($match) {
@@ -61,11 +67,9 @@ class Security {
   }
 
   public static function xssHash() {
-    if (self::$xssHash !== null)
-      return self::$xssHash;
-
-    $rand = self::getRandomBytes(16);
-    return self::$xssHash = $rand === false ? md5(uniqid(mt_rand(), true)) : bin2hex($rand);
+    return self::$xssHash ?? self::$xssHash = ($rand = self::getRandomBytes(16)) === false
+      ? md5(uniqid(mt_rand(), true))
+      : bin2hex($rand);
   }
 
   public static function entityDecode($str) {
@@ -255,5 +259,16 @@ class Security {
 
   public static function stripImageTags($str) {
     return preg_replace(['#<img[\s/]+.*?src\s*=\s*(["\'])([^\\1]+?)\\1.*?\>#i', '#<img[\s/]+.*?src\s*=\s*?(([^\s"\'=<>`]+)).*?\>#i'], '\\2', $str);
+  }
+
+  public static function clean() {
+    self::$xssHash = null;
+    self::$entities = null;
+    self::$neverAllowedStr = null;
+    self::$neverAllowedRegex = null;
+    self::$naughtyTags = null;
+    self::$evilAttributes = null;
+    self::$filenameBadChars = null;
+    return true;
   }
 }

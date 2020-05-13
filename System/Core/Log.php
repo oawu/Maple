@@ -3,83 +3,26 @@
 class Log {
   const PERMISSIONS = 0777;
   const DATE_FORMAT = 'H:i:s';
-
+  const FILE_FORMAT = 'Ymd';
+  private static $cache = [];
   private static $fopens = [];
-  private static $type = null;
-
-  public static function info($message) {
-    return self::write(self::logFormat(func_get_args()), 'Info');
-  }
-
-  public static function warning($message) {
-    return self::write(self::logFormat(func_get_args()), 'Warning');
-  }
-  
-  public static function error($message) {
-    return self::write(self::logFormat(func_get_args()), 'Error');
-  }
-
-  public static function benchmark($message) {
-    return self::write(self::logFormat(func_get_args()), 'Benchmark');
-  }
-
-  public static function model($message) {
-    return self::write(self::logFormat(func_get_args()), 'Model');
-  }
-
-  public static function uploader($message) {
-    return self::write(self::logFormat(func_get_args()), 'Uploader');
-  }
-
-  public static function saveTool($message) {
-    return self::write(self::logFormat(func_get_args()), 'SaveTool');
-  }
-
-  public static function thumbnail($message) {
-    return self::write(self::logFormat(func_get_args()), 'Thumbnail');
-  }
-
-  public static function query($sql, $vals, $status, $time) {
-    static $type;
-
-    // $new = !$type ? "\n" . Xterm::black(str_repeat('─', 80), true) . "\n" : '';
-    $new = !$type ? "\n" : '';
-
-    $type !== null || $type = !defined('MAPLE_CMD')
-      ? isCli()
-        ? Xterm::blue('cli', true) . (($tmp = implode(Xterm::gray('/')->dim(), Url::segments())) ? Xterm::black('：', true) . $tmp : '')
-        : Xterm::purple('web')     . (($tmp = implode(Xterm::gray('/')->dim(), Url::segments())) ? Xterm::black('：', true) . $tmp : '')
-      : Xterm::yellow('cmd')       . '';
-    
-    return self::write($new . $type . ' ' . Xterm::black('│', true) . ' ' . date(Log::DATE_FORMAT) . ' ' . Xterm::black('➜', true) . ' ' . Xterm::create($time)->color($time < 999 ? $time < 99 ? $time < 9 ? Xterm::L_GRAY : Xterm::L_CYAN : Xterm::L_YELLOW : Xterm::L_RED) . '' . Xterm::create('ms')->color($time < 999 ? $time < 99 ? $time < 9 ? Xterm::GRAY : Xterm::CYAN : Xterm::YELLOW : Xterm::RED) . ' ' . Xterm::black('│', true) . ' ' . ($status ? Xterm::green('OK', true) : Xterm::red('GG')) . ' ' . Xterm::black('➜', true) . ' ' . call_user_func_array('sprintf', array_merge(
-      [preg_replace_callback('/\?/', function($matches) { return Xterm::red('%s'); }, Xterm::gray($sql, true))], array_map(function($val) {
-        return dump(is_object($val) ? (string)$val : $val, '');
-      }, $vals)
-    )) . "\n", 'Query');
-  }
 
   private static function logFormat($args) {
-    return \Xterm::black('─', true)->blod() . ' Time' . Xterm::create('：')->dim() . Xterm::gray(date(Log::DATE_FORMAT), true) . ' ' . \Xterm::black(str_repeat('─', 63), true)->blod() . "\n"
-           . implode("\n" . \Xterm::black(str_repeat('─', 80), true)->dim() . "\n", array_map(function($arg) { return dump($arg); }, $args)) . "\n"
-           . \Xterm::black(str_repeat('─', 80), true)->blod() . "\n"
-           . "\n\n";
-  }
-
-  public static function closeAll() {
-    foreach (self::$fopens as $fopen)
-      fclose($fopen);
-    self::$fopens = [];
-    return true;
+    return date(Log::DATE_FORMAT) . "\n" . implode("\n", array_map('dump', $args)) . "\n\n";
   }
 
   private static function write($text, $prefix) {
     $path = PATH_FILE_LOG . $prefix . DIRECTORY_SEPARATOR;
-    file_exists($path) || dirNotExistCreate($path, 0777);
 
-    if (!is_writable($path))
+    if (!isset($cache[$path])) {
+      file_exists($path) || dirNotExistCreate($path, 0777, true);
+      $cache[$path] = is_writable($path);
+    }
+
+    if (!$cache[$path])
       return true;
 
-    $path .= date('Y-m-d') . '.log';
+    $path .= date(Log::FILE_FORMAT) . '.log';
     $newfile = !file_exists($path);
 
     if (!isset(self::$fopens[$path]))
@@ -94,8 +37,55 @@ class Log {
     $newfile && @chmod($path, Log::PERMISSIONS);
     return true;
   }
-}
 
-Status::addFuncs('Log closeAll', function() {
-  return Log::closeAll();
-});
+  public static function clean() {
+    foreach (self::$fopens as $fopen)
+      fclose($fopen);
+    self::$fopens = null;
+    self::$cache = null;
+    return true;
+  }
+  
+  public static function info() {
+    return self::write(
+      self::logFormat(
+        func_get_args()), 'Info');
+  }
+
+  public static function warning() {
+    return self::write(
+      self::logFormat(
+        func_get_args()), 'Warning');
+  }
+  
+  public static function error() {
+    return self::write(
+      self::logFormat(
+        func_get_args()), 'Error');
+  }
+
+  public static function model() {
+    return self::write(
+      self::logFormat(
+        func_get_args()), 'Model');
+  }
+
+  public static function query($sql, $vals, $status, $during, $parse) {
+    static $type;
+
+    $new = !$type ? "\n" : '';
+    $tmp = implode('/', Request::segments());
+    
+    $type !== null || $type = !defined('MAPLE_CMD')
+      ? Request::method() == 'cli'
+        ? 'cli' . ($tmp ? '：' . $tmp : '')
+        : 'web' . ($tmp ? '：' . $tmp : '')
+      : 'cmd'   . '';
+
+    return self::write($new . $type . ' ─ ' . date(Log::DATE_FORMAT) . ' ─ ' . ($status ? 'OK' : 'GG') . ' ─ ' . $during . 'ms ─ ' . ($parse ? call_user_func_array('sprintf', array_merge([preg_replace_callback('/\?/', function($matches) { return '%s'; }, str_replace('%', '%%', $sql))], array_map(function($val) { return dump(is_object($val) ? (string)$val : $val, ''); }, $vals))) : ($sql . ' ─ ' . implode(',', $vals))) . "\n", 'Query');
+  }
+
+  public static function benchmark($key) {
+    return is_array($benchmark = benchmark($key)) && isset($benchmark['time'], $benchmark['memory']) ? self::write(date(Log::DATE_FORMAT) . ' ─ ' . $key . ' ─ ' . round($benchmark['time'], 4) . 'S ─ ' . $benchmark['memory'] . 'MB' . "\n", 'Benchmark') : true;
+  }
+}

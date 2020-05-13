@@ -1,0 +1,21 @@
+
+namespace M;
+
+class <?php echo $modelName;?> extends Model {}
+<?php
+if ($imageColumns) {?>
+<?php
+  foreach($imageColumns as $imageColumn) { ?>
+
+<?php echo $modelName;?>::uploader('<?php echo $imageColumn;?>', 'Image');
+<?php
+  }
+}
+if ($fileColumns) { ?>
+<?php
+  foreach($fileColumns as $fileColumn) { ?>
+
+<?php echo $modelName;?>::uploader('<?php echo $fileColumn;?>', 'File');
+<?php
+  }
+}
