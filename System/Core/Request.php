@@ -1,8 +1,8 @@
 <?php
 
 abstract class Request {
+  public static $router = null;
   private static $method = null;
-  private static $router = null;
   private static $segments = null;
   private static $params = null;
   
@@ -10,11 +10,8 @@ abstract class Request {
   private static $headers = null;
   private static $input = null;
   private static $hasSanitizeGlobals = null;
-
-  public static $controllerClass = null;
-  public static $controllerMethod = null;
-  public static $controllerMiddlewares = null;
-  public static $controllerObject = null;
+  
+  public static $obj = null;
 
   public static function clean() {
     self::$method = null;
@@ -27,9 +24,6 @@ abstract class Request {
     self::$input = null;
     self::$hasSanitizeGlobals = null;
   
-    self::$controllerClass = null;
-    self::$controllerMethod = null;
-    self::$controllerObject = null;
     return true;
   }
 
@@ -205,12 +199,12 @@ abstract class Request {
   }
 
   public static function segments() {
-    return self::$segments ?? self::$segments = array_map(function ($t) { return urldecode($t); }, self::method() != 'cli'
+    return self::$segments ?? self::$segments = array_values(array_map(function ($t) { return urldecode($t); }, self::method() != 'cli'
       ? ($tmp = parse_url('http://__' . $_SERVER['REQUEST_URI'])) && isset($tmp['path'])
         ? array_filter(explode('/', $tmp['path']), function($t) { return $t !== ''; })
         : []
       : arrayFlatten(array_map(function($argv) { return explode('/', $argv); }, array_slice($_SERVER['argv'], 1)))
-    );
+    ));
   }
 
   public static function method() {
@@ -223,6 +217,32 @@ abstract class Request {
     $args = func_get_args();
     $args && call_user_func_array('Log::warning', $args);
     return GG('迷路惹！', 404);
+  }
+
+  private static function execMiddleware() {
+    $return = null;
+
+    foreach (self::$router->mids() as $mid) {
+      strpos($mid, '@') !== false || $mid = $mid . '@' . 'index';
+      list($class, $method) = explode('@', $mid);
+
+      if (!Load::middleware($class))
+        return self::notFound('載入 Middleware Class 失敗！', '路徑：' . PATH_APP_MIDDLEWARE . $class . '.php');
+      
+      $className = '\\Middleware\\' . $class;
+      $mid = new $className();
+
+      if (!method_exists($mid, $method))
+        return self::notFound('Middleware 沒有「' . $method . '」method！', '路徑：' . PATH_APP_MIDDLEWARE . $className . '.php');
+
+      try {
+        $mid->$method($return);
+      } catch (MapleException $e) {
+        return $e;
+      }
+    }
+
+    return $return;
   }
 
   public static function execController() {
@@ -248,34 +268,17 @@ abstract class Request {
     if (!self::$router)
       return self::notFound('找不到此 Request 所屬 Router！');
 
-    self::$controllerMiddlewares = [];
-
-    foreach (self::$router->mids() as $mid) {
-      strpos($mid, '@') !== false || $mid = $mid . '@' . 'index';
-      list($class, $method) = explode('@', $mid);
-
-      if (!Load::middleware($class))
-        return self::notFound('載入 Middleware Class 失敗！', '路徑：' . PATH_APP_MIDDLEWARE . $class . '.php');
-      
-      $class = '\\Middleware\\' . $class;
-      $mid = new $class();
-
-      if (!method_exists($mid, $method))
-        return self::notFound('Middleware 沒有「' . $method . '」method！', '路徑：' . PATH_APP_MIDDLEWARE . $class . '.php');
-
-      try {
-        array_push(self::$controllerMiddlewares, ['obj' => $mid, 'result' => $mid->$method()]);
-      } catch (MapleException $e) {
-        Response::$code = $e->getStatusCode();
-        return call_user_func_array('ifError', $e->getMessages());
-      }
-    }
-
     $func = self::$router->func();
     if ($func !== null) {
+      $return = self::execMiddleware();
+      if ($return instanceof MapleException) {
+        Response::$code = $return->getStatusCode();
+        return call_user_func_array('ifError', $return->getMessages());
+      }
+
       try {
         Log::benchmark('ExecController');
-        $result = is_callable($func) ? $func() : $func;
+        $result = is_callable($func) ? $func($return) : $func;
         Log::benchmark('ExecController');
       } catch (MapleException $e) {
         Response::$code = $e->getStatusCode();
@@ -285,8 +288,8 @@ abstract class Request {
     }
 
     $path = self::$router->path();
-    $class = self::$controllerClass = self::$router->class();
-    $method = self::$controllerMethod = self::$router->method();
+    $class = self::$router->class();
+    $method = self::$router->method();
 
     if (!isset($path, $class, $method))
       return self::notFound('找不到 Router 基本參數！', '路徑：' . $path . '.php', 'Class：' . $class, 'Method：' . $method);
@@ -297,13 +300,14 @@ abstract class Request {
     if (!class_exists($class))
       return self::notFound('Controller Class 不存在！', '請檢查「' . $path . '.php」檔案的 Class 名稱是否正確！');
 
-    $exec = function($class, $method) {
+    $exec = function($class, $method, $middleware) {
       try {
-        $obj = new $class();
+        $obj = new $class($middleware);
+
         method_exists($obj, $method) || GG('迷路惹！', 404);
 
         Log::benchmark('ExecController');
-        $result = call_user_func_array([self::$controllerObject =& $obj, $method], Request::params());
+        $result = call_user_func_array([self::$obj =& $obj, $method], Request::params());
         Log::benchmark('ExecController');
         return $result;
       } catch (MapleException $e) {
@@ -312,7 +316,13 @@ abstract class Request {
       }
     };
 
-    $exec = $exec($class, $method);
+    
+    $return = self::execMiddleware();
+    if ($return instanceof MapleException) {
+      Response::$code = $return->getStatusCode();
+      return call_user_func_array('ifError', $return->getMessages());
+    }
+    $exec = $exec($class, $method, $return);
 
     return is_callable($exec)
       ? $exec()
@@ -323,15 +333,16 @@ abstract class Request {
     if (isset(self::$input)) return self::$input;
 
     $body = self::inputStream();
-    $boundary = substr($body, 0, strpos($body, "\r\n"));
 
-    if (empty($boundary) && substr($header = Request::headers('Content-Type'), 0, strpos($header, ";")) == 'application/x-www-form-urlencoded') {
+    $boundary = substr($body, 0, strpos($body, "\r\n"));
+    $type = self::type();
+
+    if (empty($boundary) && $type == 'application/x-www-form-urlencoded') {
       parse_str($body, $data);
       return self::$input = ['forms' => $data, 'files' => []];
     }
 
-    $type = Request::headers('Content-Type');
-    if (substr($type, 0, strpos($type, ";")) != 'multipart/form-data') {
+    if ($type != 'multipart/form-data') {
       return self::$input = ['forms' => [], 'files' => []];
     }
 
@@ -362,10 +373,15 @@ abstract class Request {
 
       preg_match('/^(.+); *name="([^"]+)"(; *filename="([^"]+)")?/', $content, $matches);
       list(, , $key) = $matches;
+      
+      if (!isset($matches[4])) {
+        array_push($forms, urlencode($key) . '=' . urlencode(substr($body, 0, strlen($body) - 2)));
+        continue;
+      }
 
-      isset($matches[4])
-        ? array_push($files, urlencode($key) . '=' . urlencode(json_encode(['name' => $matches[4], 'type' => trim($value), 'tmp_name' => tempnam(ini_get('upload_tmp_dir'), pathinfo($matches[4], PATHINFO_FILENAME)), 'error' => 0, 'size' => strlen($body)])))
-        : array_push($forms, urlencode($key) . '=' . urlencode(substr($body, 0, strlen($body) - 2)));
+      $tmpName = tempnam(ini_get('upload_tmp_dir'), pathinfo($matches[4], PATHINFO_FILENAME));
+      $bytes = @file_put_contents($tmpName, $body);
+      $bytes === false || array_push($files, urlencode($key) . '=' . urlencode(json_encode(['name' => $matches[4], 'type' => trim($value), 'tmp_name' => $tmpName, 'error' => 0, 'size' => strlen($body)])));
     }
 
     parse_str(implode('&', $files), $files);
@@ -391,6 +407,12 @@ abstract class Request {
       $result[$prefix] = $array;
 
     return $result;
+  }
+  
+  private static function type($d4 = '') {
+    $type = Request::headers('Content-Type') ?? $d4;
+    $type = explode(';', $type);
+    return strtolower(array_shift($type));
   }
 
   public static function forms($index = null, $xssClean = true) {
@@ -427,12 +449,12 @@ abstract class Request {
   }
 
   public static function rawText() {
-    if (!in_array(Request::headers('Content-Type'), ['text/plain', 'application/json'])) return null;
+    if (!in_array(self::type('text/plain'), ['text/plain', 'application/json'])) return null;
     return self::inputStream();
   }
 
   public static function rawJson() {
-    if (!in_array(Request::headers('Content-Type'), ['application/json'])) return null;
+    if (self::type('text/plain') != 'application/json') return null;
     $body = self::inputStream();
     return isJson($body) ? $body : null;
   }

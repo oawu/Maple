@@ -13,10 +13,10 @@ namespace CMD {
       if (!in_array($env, ['dev', 'test', 'pro', 'sta', 'Development', 'Testing', 'Staging', 'Production']))
         return FeatureHelp::create('Init');
 
-      $env === 'dev' && $env = 'Development';
+      $env === 'dev'  && $env = 'Development';
       $env === 'test' && $env = 'Testing';
-      $env === 'sta' && $env = 'Staging';
-      $env === 'pro' && $env = 'Production';
+      $env === 'sta'  && $env = 'Staging';
+      $env === 'pro'  && $env = 'Production';
 
       Load::systemFunc('File')            ?: failure('載入 File 失敗！');
       Load::systemCmd('Display')          ?: failure('載入 Display 失敗！');
@@ -78,7 +78,9 @@ namespace CMD {
       $isRefresh = in_array($type, ['-R', '--refresh']);
 
       if ($isRefresh)
-        return FeatureMigration::refresh(Migration::latestVersion());
+        return ENVIRONMENT === 'Production'
+          ? failure("警告！正式站 Migration 禁止使用 --refresh(-R) 參數")
+          : FeatureMigration::refresh(Migration::latestVersion());
 
       $type === '' && $type = Migration::latestVersion();
 

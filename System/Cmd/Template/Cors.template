@@ -1,14 +1,21 @@
 
 namespace Middleware;
 
+use Response;
+use Request;
+
 class Cors {
-  private $urls = [];
+  private $origins = ['http://127.0.0.1:8000', 'https://test.gps.godmaps.tw'];
   private $methods = ['POST', 'PUT', 'DELETE', 'OPTIONS'];
   private $headers = ['Content-Type', 'Authorization', 'X-Requested-With', 'authorization'];
 
   public function index() {
-    \Response::addHeader("Access-Control-Allow-Headers: " . implode(', ', $this->headers));
-    \Response::addHeader("Access-Control-Allow-Methods: " . implode(', ', $this->methods));
-    \Response::addHeader("Access-Control-Allow-Origin: " . implode(', ', $this->urls));
+    Response::addHeader("Access-Control-Allow-Headers: " . implode(', ', $this->headers));
+    Response::addHeader("Access-Control-Allow-Methods: " . implode(', ', $this->methods));
+
+    $origin = Request::headers('origin');
+    $this->origins
+      && in_array($origin, $this->origins)
+      && Response::addHeader("Access-Control-Allow-Origin: " . $origin);
   }
 }

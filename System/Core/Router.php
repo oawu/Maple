@@ -61,6 +61,7 @@ namespace {
     private $method;
     private $name;
     private $func;
+    private $title;
 
     private $uris = [];
     private $dirs = [];
@@ -78,19 +79,21 @@ namespace {
     ];
 
     public function __construct($method, $groups, $segment) {
+      $this->uris = array_reduce(array_filter(array_map(function($group) { return $group->uri(); }, $groups), function($uri) { return $uri !== '' && $uri !== []; }), function($a, $b) { return array_merge($a, is_array($b) ? $b : [$b]); }, []);
+      $this->dirs = array_reduce(array_filter(array_map(function($group) { return $group->dir(); }, $groups), function($dir) { return $dir !== '' && $dir !== []; }), function($a, $b) { return array_merge($a, is_array($b) ? $b : [$b]); }, []);
+      $this->mids = array_reduce(array_filter(array_map(function($group) { return $group->mid(); }, $groups), function($mid) { return $mid !== '' && $mid !== []; }), function($a, $b) { return array_merge($a, is_array($b) ? $b : [$b]); }, []);
+      $this->groupNames = array_reduce(array_filter(array_map(function($group) { return $group->name(); }, $groups), function($name) { return $name !== '' && $name !== []; }), function($a, $b) { return array_merge($a, is_array($b) ? $b : [$b]); }, []);
 
-      $this->uris = array_filter(array_map(function($group) { return $group->uri(); }, $groups), function($uri) { return $uri !== ''; });
-      $this->dirs = array_filter(array_map(function($group) { return $group->dir(); }, $groups), function($dir) { return $dir !== ''; });
-      $this->mids = array_filter(array_map(function($group) { return $group->mid(); }, $groups), function($mid) { return $mid !== ''; });
-
-      // echo '<meta http-equiv="Content-type" content="text/html; charset=utf-8" /><pre>';
-      // var_dump($this->mids);
-      // exit();
-
-      $this->groupNames = array_filter(array_map(function($group) { return $group->name(); }, $groups), function($name) { return $name !== ''; });
       $this->segment = self::setSegment(($this->uris ? implode('/', $this->uris) . '/' : '') . trim($segment, '/'));
       self::$routers[$method] = self::$routers[$method] ?? [];
       return self::$routers[$method][$this->segment] = &$this;
+    }
+
+    public function title($title = null) {
+      if ($title === null)
+        return $this->title;
+      $this->title = $title;
+      return $this;
     }
 
     public function return($func) {
@@ -124,6 +127,11 @@ namespace {
 
     public function alias($name) {
       return $this->name($name);
+    }
+
+    public function mid() {
+      $this->mids = array_merge($this->mids, array_reduce(func_get_args(), function($a, $b) { return array_merge($a, is_array($b) ? $b : [$b]); }, []));
+      return $this;
     }
 
     public function __call($name, $arguments) {
@@ -180,13 +188,9 @@ namespace {
     }
 
     public static function __callStatic($name, $args) {
-      $methods = [
-        'cli', 'get', 'post', 'put', 'delete', 'del',
-        'copy', 'head', 'options', 'link', 'unlink', 'purge',
-      ];
+      $methods = ['cli', 'get', 'post', 'put', 'delete', 'del', 'copy', 'head', 'options', 'link', 'unlink', 'purge'];
 
-      in_array($name = strtolower($name), $methods)
-        || QQ('Router 不存在「' . $name . '」的 Static 方法！');
+      in_array($name = strtolower($name), $methods) || QQ('Router 不存在「' . $name . '」的 Static 方法！');
 
       $name == 'del' && $name = 'delete';
       $args || $args = [''];

@@ -71,8 +71,8 @@ class Load {
             Load::$method($file);
   }
 
-  public static function composer() {
-    return config('Other', 'loadComposer')
+  public static function composer($isAuto = false) {
+    return !$isAuto || config('Other', 'loadComposer')
       ? self::file(PATH . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php')
       : true;
   }

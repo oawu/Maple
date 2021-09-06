@@ -17,14 +17,14 @@ return [
     ],
 
     // 處理圖片時暫存位置
-    'tmpDir' => sys_get_temp_dir() . DIRECTORY_SEPARATOR,
+    'tmpDir' => rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR,
     
     // 儲存基礎目錄
     'baseDirs' => ['Storage'],
-    
+
     // 基礎網址
     'baseURL' => 'http://127.0.0.1/',
-    
+
     // 不存在時預設檔案
     'default' => 'http://127.0.0.1/404.png',
   ],

@@ -238,3 +238,9 @@ if (!function_exists('transaction')) {
     return $errors ? error($code, ...array_merge(['資料庫處理錯誤！'], $errors)) : $result;
   }
 }
+
+if (!function_exists('rollback')) {
+  function rollback($message = null) {
+    return \M\rollback($message);
+  }
+}

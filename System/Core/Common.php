@@ -62,13 +62,13 @@ if (!function_exists('dump')) { // 專門印變數用的(不錯用，可以印�
 
       if ($val instanceof \M\Core\Plugin\Uploader\File)
         return $space . 'Uploader(File) {' . $ln
-              . $space2 . '"value": ' . dump($val->value()) . $ln
+              . $space2 . '"value": ' . dump($val->value) . $ln
               . $space2 . '"defaultURL": ' . dump($val->defaultURL()) . $ln
               . $space . '}';
 
       if ($val instanceof \M\Core\Plugin\Uploader\Image)
         return $space . 'Uploader(Image) {' . $ln
-              . $space2 . '"value": ' . dump($val->value()) . $ln
+              . $space2 . '"value": ' . dump($val->value) . $ln
               . $space2 . '"defaultURL": ' . dump($val->defaultURL()) . $ln
               . $space2 . '"versions": ' . '[' . $ln . implode(', ' . $ln, array_map(function($t) use ($level, $spaceStr, $ln, $base) { return dump($t, $ln, $spaceStr, $level + 2); }, array_keys($val->versions()))) . $ln . $space2 . ']' . $ln
               . $space . '}';
