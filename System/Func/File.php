@@ -2,25 +2,22 @@
 
 if (!function_exists('fileRead')) {
   function fileRead($file) {
-    if (!file_exists($file))
-      return false;
+    if (function_exists('file_get_contents'))
+      return @file_get_contents($file);
 
     if (!is_readable($file))
       return false;
 
-    if (function_exists('file_get_contents'))
-      return @file_get_contents($file);
-
-    $fp = @fopen($file, FOPEN_READ);
+    $fp = @fopen($file, 'rb');
     
     if ($fp === false)
       return false;
 
     flock($fp, LOCK_SH);
 
-    $data = '';
-    if (filesize($file) > 0)
-      $data =& fread($fp, filesize($file));
+    $data = filesize($file) > 0
+      ? fread($fp, filesize($file))
+      : '';
 
     flock($fp, LOCK_UN);
     fclose($fp);
@@ -31,9 +28,6 @@ if (!function_exists('fileRead')) {
 
 if (!function_exists('fileWrite')) {
   function fileWrite($path, $data, $mode = 'wb') {
-    if (function_exists('file_put_contents'))
-      return @file_put_contents($path, $data);
-
     if (!$fp = @fopen($path, $mode))
       return false;
 
@@ -96,7 +90,7 @@ if (!function_exists('dirFilesInfo')) {
       }
 
       closedir($fp);
-      return $filedata;
+      return array_values($filedata);
     }
 
     return false;

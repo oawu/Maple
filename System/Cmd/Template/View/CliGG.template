@@ -1,0 +1,16 @@
+
+$messages = implode("\n", array_map(function($message) { return '  ' . str_replace("\n", "\n  ", dump($message)); }, $messages));
+$details  = implode("\n", array_map(function($detail) { return '  ◉ ' . $detail['title'] . '：' . $detail['content']; }, $details));
+$traces   = implode("\n", array_map(function($trace) { return '  ◉ ' . $trace['info'] . "\n" . '    ↳ ' . $trace['path']; }, $traces));
+
+if (!($messages || $details || $traces))
+  echo "\n【錯誤】\n";
+
+if ($messages)
+  echo "\n【錯誤訊息】\n" . $messages . "\n";
+
+if ($details)
+  echo "\n【錯誤原因】\n" . $details . "\n";
+
+if ($traces)
+  echo "\n【錯誤追蹤】\n" . $traces . "\n";

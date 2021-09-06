@@ -6,8 +6,8 @@ if (!function_exists('isEmail')) {
   }
 }
 
-if (!function_exists('isUrl')) {
-  function isUrl($url) {
+if (!function_exists('isURL')) {
+  function isURL($url) {
     return preg_match('/^https?:\/\/.*/', $url);
   }
 }

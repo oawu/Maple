@@ -8,3 +8,4 @@ sftp-config*
 
 composer.lock
 /System/Env.php
+/System/Key.php

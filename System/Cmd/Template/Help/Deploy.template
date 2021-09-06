@@ -1,0 +1,19 @@
+
+Maple 8 部署指令 - deploy
+
+  ◉ 指令：
+    deploy
+
+    說明：
+      部署至所有工作站，指定方式在 Config/Deploy.php 內設定。
+      如果有設定環境 Config，其設定檔則為 Config/[環境]/Deploy.php 內。
+
+
+
+  ◉ 指令：
+    deploy [--stage | -S] <stage name>
+  
+    說明：
+      部署至指定工作站，指定方式在 Config/Deploy.php 內設定。
+      如果有設定環境 Config，其設定檔則為 Config/[環境]/Deploy.php 內。
+
