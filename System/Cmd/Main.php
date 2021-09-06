@@ -10,8 +10,13 @@ namespace CMD {
       if (!$env = array_shift($argvs))
         return FeatureHelp::create('Init');
 
-      if (!in_array($env, ['Development', 'Testing', 'Staging', 'Production']))
+      if (!in_array($env, ['dev', 'test', 'pro', 'sta', 'Development', 'Testing', 'Staging', 'Production']))
         return FeatureHelp::create('Init');
+
+      $env === 'dev' && $env = 'Development';
+      $env === 'test' && $env = 'Testing';
+      $env === 'sta' && $env = 'Staging';
+      $env === 'pro' && $env = 'Production';
 
       Load::systemFunc('File')            ?: failure('載入 File 失敗！');
       Load::systemCmd('Display')          ?: failure('載入 Display 失敗！');
