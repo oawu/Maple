@@ -8,14 +8,14 @@
 * 主要大功能如下：
   * 指令控制框架
   * 針對資料庫採用 Migration 管理
-  * Model 採用 [Maple-ORM](https://github.com/comdan66/Maple-ORM)([2.0+](https://github.com/comdan66/Maple-ORM/releases/tag/2.0.0)) 的 [Active Record](https://zh.wikipedia.org/zh-tw/Active_Record) 設計
+  * Model 採用 [Maple-ORM](https://github.com/oawu/Maple-ORM)([2.0+](https://github.com/oawu/Maple-ORM/releases/tag/2.0.0)) 的 [Active Record](https://zh.wikipedia.org/zh-tw/Active_Record) 設計
   * 採用 [Deployer](https://deploye4.r.org/) 快速部署至伺服器
 
 * 製作參考如下：
   * [CodeIgniter](https://www.codeigniter.com/)
-  * [OACI](https://github.com/comdan66/oaci)
-  * [Maple4](https://github.com/comdan66/Maple/tree/4.0.13)
-  * [Maple7](https://github.com/comdan66/Maple/tree/7.1.5)
+  * [OACI](https://github.com/oawu/oaci)
+  * [Maple4](https://github.com/oawu/Maple/tree/4.0.13)
+  * [Maple7](https://github.com/oawu/Maple/tree/7.1.5)
   * [php-activerecord](https://github.com/jpfuentes2/php-activerecord)
 
 ## 初始化專案
