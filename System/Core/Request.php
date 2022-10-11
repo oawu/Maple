@@ -214,8 +214,8 @@ abstract class Request {
   }
 
   public static function notFound() {
-    $args = func_get_args();
-    $args && call_user_func_array('Log::warning', $args);
+    // $args = func_get_args();
+    // $args && call_user_func_array('Log::warning', $args);
     return GG('迷路惹！', 404);
   }
 
@@ -335,14 +335,19 @@ abstract class Request {
     $body = self::inputStream();
 
     $boundary = substr($body, 0, strpos($body, "\r\n"));
-    $type = self::type();
 
-    if (empty($boundary) && $type == 'application/x-www-form-urlencoded') {
-      parse_str($body, $data);
-      return self::$input = ['forms' => $data, 'files' => []];
+    if (empty($boundary)) {
+      $header = Request::headers('Content-Type');
+      $header = explode(';', $header);
+      $header = array_shift($header);
+      if ($header === 'application/x-www-form-urlencoded') {
+        parse_str($body, $data);
+        return self::$input = ['forms' => $data, 'files' => []];
+      }
     }
 
-    if ($type != 'multipart/form-data') {
+    $type = Request::headers('Content-Type');
+    if (substr($type, 0, strpos($type, ";")) != 'multipart/form-data') {
       return self::$input = ['forms' => [], 'files' => []];
     }
 
@@ -408,12 +413,6 @@ abstract class Request {
 
     return $result;
   }
-  
-  private static function type($d4 = '') {
-    $type = Request::headers('Content-Type') ?? $d4;
-    $type = explode(';', $type);
-    return strtolower(array_shift($type));
-  }
 
   public static function forms($index = null, $xssClean = true) {
     if (Request::method() == 'post')
@@ -449,12 +448,12 @@ abstract class Request {
   }
 
   public static function rawText() {
-    if (!in_array(self::type('text/plain'), ['text/plain', 'application/json'])) return null;
+    if (!in_array(Request::headers('Content-Type'), ['text/plain', 'application/json'])) return null;
     return self::inputStream();
   }
 
   public static function rawJson() {
-    if (self::type('text/plain') != 'application/json') return null;
+    if (!in_array(Request::headers('Content-Type'), ['application/json'])) return null;
     $body = self::inputStream();
     return isJson($body) ? $body : null;
   }
