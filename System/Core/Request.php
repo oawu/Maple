@@ -268,17 +268,18 @@ abstract class Request {
     if (!self::$router)
       return self::notFound('找不到此 Request 所屬 Router！');
 
+    $middleware = self::execMiddleware();
+    if ($middleware instanceof MapleException) {
+      Response::$code = $middleware->getStatusCode();
+      return call_user_func_array('ifError', $middleware->getMessages());
+    }
+
     $func = self::$router->func();
     if ($func !== null) {
-      $return = self::execMiddleware();
-      if ($return instanceof MapleException) {
-        Response::$code = $return->getStatusCode();
-        return call_user_func_array('ifError', $return->getMessages());
-      }
-
+      $result = null;
       try {
         Log::benchmark('ExecController');
-        $result = is_callable($func) ? $func($return) : $func;
+        $result = is_callable($func) ? $func($middleware) : $func;
         Log::benchmark('ExecController');
       } catch (MapleException $e) {
         Response::$code = $e->getStatusCode();
@@ -300,33 +301,21 @@ abstract class Request {
     if (!class_exists($class))
       return self::notFound('Controller Class 不存在！', '請檢查「' . $path . '.php」檔案的 Class 名稱是否正確！');
 
-    $exec = function($class, $method, $middleware) {
-      try {
-        $obj = new $class($middleware);
+    $result = null;
+    try {
+      $obj = new $class($middleware);
 
-        method_exists($obj, $method) || GG('迷路惹！', 404);
+      method_exists($obj, $method) || GG('迷路惹！', 404);
 
-        Log::benchmark('ExecController');
-        $result = call_user_func_array([self::$obj =& $obj, $method], Request::params());
-        Log::benchmark('ExecController');
-        return $result;
-      } catch (MapleException $e) {
-        Response::$code = $e->getStatusCode();
-        return call_user_func_array('ifError', $e->getMessages());
-      }
-    };
-
-    
-    $return = self::execMiddleware();
-    if ($return instanceof MapleException) {
-      Response::$code = $return->getStatusCode();
-      return call_user_func_array('ifError', $return->getMessages());
+      Log::benchmark('ExecController');
+      $result = call_user_func_array([self::$obj =& $obj, $method], Request::params());
+      Log::benchmark('ExecController');
+    } catch (MapleException $e) {
+      Response::$code = $e->getStatusCode();
+      return call_user_func_array('ifError', $e->getMessages());
     }
-    $exec = $exec($class, $method, $return);
 
-    return is_callable($exec)
-      ? $exec()
-      : $exec;
+    return $result;
   }
 
   private static function parseInput() {
