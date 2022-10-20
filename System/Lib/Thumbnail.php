@@ -76,7 +76,7 @@ namespace Thumbnail {
         in_array($this->format, $allows) || self::error('不支援此檔案格式！格式：' . $this->format . '，目前只允許：' . json_encode(static::allows()));
 
       $this->image = $this->class == 'Thumbnail\Imagick'
-        ? new Imagick($this->filePath)
+        ? new \Imagick($this->filePath)
         : $this->getOldImage($this->format);
 
       $this->image || self::error('產生 image 物件失敗！');
