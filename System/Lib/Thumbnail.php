@@ -30,18 +30,6 @@ namespace Thumbnail {
         : [];
     }
 
-    public static function sort2DArr($key, $list) {
-      if (!$list) return $list;
-
-      $tmp = [];
-      foreach ($list as &$ma)
-        $tmp[] = &$ma[$key];
-
-      array_multisort($tmp, SORT_DESC, $list);
-
-      return $list;
-    }
-
     public static function create($filePath, $options = []) {
       return new static($filePath, $options);
     }
@@ -971,22 +959,71 @@ namespace Thumbnail {
         return [];
 
       $temp = clone $this->image;
+      $dimension = $this->getDimension($temp);
+      $dimension = $this->calcWidth($dimension, $this->createNewDimension($s = ceil(sqrt($limit)), $s));
 
-      $temp->quantizeImage($limit, \Imagick::COLORSPACE_RGB, 0, false, false );
-      $pixels = $temp->getImageHistogram();
+      $temp = $temp->coalesceImages();
+      if ($this->format == 'gif')
+        do { $temp->thumbnailImage($dimension[0], $dimension[1], false); }
+        while ($temp->nextImage() || !$temp = $temp->deconstructImages());
+      else
+        $temp->thumbnailImage($dimension[0], $dimension[1], false);
 
-      $datas = [];
-      $index = 0;
-      $pixelCount = $this->dimension[0] * $this->dimension[1];
+      $colors = [];
 
-      if ($pixels && $limit)
-        foreach ($pixels as $pixel)
-          if ($index++ < $limit)
-            array_push($datas, array ('color' => $pixel->getColor(), 'count' => $pixel->getColorCount(), 'percent' => round($pixel->getColorCount() / $pixelCount * 100)));
-          else
+      $it = $temp->getPixelIterator();
+      $it->resetIterator();
+      while ($row = $it->getNextIteratorRow())
+        foreach ($row as $pixel)
+          array_push($colors, $pixel->getColor());
+
+      $newColors = [];
+      $unit = 2;
+      foreach ($colors as $color) {
+        $r = $color['r'];
+        $g = $color['g'];
+        $b = $color['b'];
+        if (!$newColors) {
+          array_push($newColors, ['color' => ['r' => $r, 'g' => $g, 'b' => $b], 'colors' => [['r' => $r, 'g' => $g, 'b' => $b]]]);
+          continue;
+        }
+        
+        // 最長距離 441.67295593006
+
+        $c = count($newColors);
+        $x = false;
+        for ($i = 0; $i < $c; $i++) {
+          $color = $newColors[$i]['color'];
+          $val = abs(sqrt(pow($color['r'] - $r, 2) + pow($color['g'] - $g, 2) + pow($color['b'] - $b, 2)));
+          if ($val < 70) {
+            $x = true;
+            array_push($newColors[$i]['colors'], ['r' => $r, 'g' => $g, 'b' => $b]);
             break;
+          }
+        }
+        $x || array_push($newColors, ['color' => ['r' => $r, 'g' => $g, 'b' => $b], 'colors' => [['r' => $r, 'g' => $g, 'b' => $b]]]);
+      }
 
-      return static::sort2DArr('count', $datas);
+      $newColors = array_map(function($newColor) {
+        $r = ($c = count($tmps = array_column($newColor['colors'], 'r'))) > 0 ? round(array_sum($tmps) / $c) : 0;
+        $g = ($c = count($tmps = array_column($newColor['colors'], 'g'))) > 0 ? round(array_sum($tmps) / $c) : 0;
+        $b = ($c = count($tmps = array_column($newColor['colors'], 'b'))) > 0 ? round(array_sum($tmps) / $c) : 0;
+        return [
+          'color' => ['r' => $r, 'g' => $g, 'b' => $b],
+          'count' => count($newColor['colors']),
+        ];
+      }, $newColors);
+      $max = array_sum(array_column($newColors, 'count'));
+      $newColors = array_map(function($newColor) use ($max) {
+        return [
+          'color' => $newColor['color'],
+          'percent' => $max > 0 ? round(($newColor['count'] / $max) * 100) : 0,
+        ];
+      }, $newColors);
+
+      usort($newColors, function($a, $b) { return $b['percent'] - $a['percent']; });
+
+      return array_slice($newColors, 0, $limit);
     }
 
     public function saveAnalysisChart($file, $font, $limit = 10, $fontSize = 14, $adjoin = true) {
@@ -1016,7 +1053,7 @@ namespace Thumbnail {
         $draw = new \ImagickDraw();
         $draw->setFont($font);
         $draw->setFontSize($fontSize);
-        $newImage->annotateImage($draw, 25, 14, 0, 'Percentage of total pixels : ' . (strlen($data['percent']) < 2 ? ' ':'') . $data['percent'] . '% (' . $data['count'] . ')');
+        $newImage->annotateImage($draw, 25, 14, 0, 'rgb(' . $data['color']['r'] . ',' . $data['color']['g'] . ',' . $data['color']['b'] . ') ' . $data['percent'] . '%');
 
         $tile = new \Imagick();
         $tile->newImage(20, 20, new \ImagickPixel('rgb(' . $data['color']['r'] . ',' . $data['color']['g'] . ',' . $data['color']['b'] . ')'));
@@ -1024,7 +1061,7 @@ namespace Thumbnail {
         $newImage->compositeImage($tile, \Imagick::COMPOSITE_OVER, 0, 0);
       }
 
-      $newImage = $newImage->montageImage(new imagickdraw(), '1x' . count($datas) . '+0+0', '400x20+4+2>', \Imagick::MONTAGEMODE_UNFRAME, '0x0+3+3');
+      $newImage = $newImage->montageImage(new \imagickdraw(), '1x' . count($datas) . '+0+0', '400x20+4+2>', \Imagick::MONTAGEMODE_UNFRAME, '0x0+3+3');
       $newImage->setImageFormat($format);
       $newImage->setFormat($format);
       $newImage->writeImages($file, $adjoin);
