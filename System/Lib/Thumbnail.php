@@ -573,7 +573,7 @@ namespace Thumbnail {
     }
 
     private function _machiningImageCrop($cropX, $cropY, $width, $height, $color = 'transparent') {
-      $newImage = new Imagick();
+      $newImage = new \Imagick();
       $newImage->setFormat($this->format);
 
       if ($this->format == 'gif') {
@@ -581,10 +581,10 @@ namespace Thumbnail {
         $imagick = $imagick->coalesceImages();
         
         do {
-          $temp = new Imagick();
-          $temp->newImage($width, $height, new ImagickPixel($color));
+          $temp = new \Imagick();
+          $temp->newImage($width, $height, new \ImagickPixel($color));
           $imagick->chopImage($cropX, $cropY, 0, 0);
-          $temp->compositeImage($imagick, Imagick::COMPOSITE_DEFAULT, 0, 0);
+          $temp->compositeImage($imagick, \Imagick::COMPOSITE_DEFAULT, 0, 0);
 
           $newImage->addImage($temp);
           $newImage->setImageDelay($imagick->getImageDelay ());
@@ -592,14 +592,14 @@ namespace Thumbnail {
       } else {
         $imagick = clone $this->image;
         $imagick->chopImage($cropX, $cropY, 0, 0);
-        $newImage->newImage($width, $height, new ImagickPixel($color));
-        $newImage->compositeImage($imagick, Imagick::COMPOSITE_DEFAULT, 0, 0);
+        $newImage->newImage($width, $height, new \ImagickPixel($color));
+        $newImage->compositeImage($imagick, \Imagick::COMPOSITE_DEFAULT, 0, 0);
       }
       return $newImage;
     }
 
     private function _machiningImageRotate($degree, $color = 'transparent') {
-      $newImage = new Imagick();
+      $newImage = new \Imagick();
       $newImage->setFormat($this->format);
       $imagick = clone $this->image;
 
@@ -607,19 +607,19 @@ namespace Thumbnail {
         $imagick->coalesceImages();
         
         do {
-          $temp = new Imagick();
-          $imagick->rotateImage(new ImagickPixel($color), $degree);
+          $temp = new \Imagick();
+          $imagick->rotateImage(new \ImagickPixel($color), $degree);
           $newDimension = $this->getDimension($imagick);
-          $temp->newImage($newDimension[0], $newDimension[1], new ImagickPixel($color));
-          $temp->compositeImage($imagick, Imagick::COMPOSITE_DEFAULT, 0, 0);
+          $temp->newImage($newDimension[0], $newDimension[1], new \ImagickPixel($color));
+          $temp->compositeImage($imagick, \Imagick::COMPOSITE_DEFAULT, 0, 0);
           $newImage->addImage($temp);
           $newImage->setImageDelay($imagick->getImageDelay());
         } while ($imagick->nextImage());
       } else {
-        $imagick->rotateImage(new ImagickPixel($color), $degree);
+        $imagick->rotateImage(new \ImagickPixel($color), $degree);
         $newDimension = $this->getDimension($imagick);
-        $newImage->newImage($newDimension[0], $newDimension[1], new ImagickPixel($color));
-        $newImage->compositeImage($imagick, Imagick::COMPOSITE_DEFAULT, 0, 0);
+        $newImage->newImage($newDimension[0], $newDimension[1], new \ImagickPixel($color));
+        $newImage->compositeImage($imagick, \Imagick::COMPOSITE_DEFAULT, 0, 0);
       }
       return $newImage;
     }
@@ -646,7 +646,7 @@ namespace Thumbnail {
     }
 
     private function _createFont($font, $fontSize, $color, $alpha) {
-      $draw = new ImagickDraw();
+      $draw = new \ImagickDraw();
       $draw->setFont($font);
       $draw->setFontSize($fontSize);
       $draw->setFillColor($color);
@@ -668,7 +668,7 @@ namespace Thumbnail {
       if ($width < $this->dimension[0] || $height < $this->dimension[1])
         $this->resize($width, $height);
 
-      $newImage = new Imagick();
+      $newImage = new \Imagick();
       $newImage->setFormat($this->format);
 
       if ($this->format == 'gif') {
@@ -676,15 +676,15 @@ namespace Thumbnail {
         $imagick = $imagick->coalesceImages();
 
         do {
-          $temp = new Imagick();
-          $temp->newImage($width, $height, new ImagickPixel($color));
-          $temp->compositeImage($imagick, Imagick::COMPOSITE_DEFAULT, intval(($width - $this->dimension[0]) / 2), intval(($height - $this->dimension[1]) / 2));
+          $temp = new \Imagick();
+          $temp->newImage($width, $height, new \ImagickPixel($color));
+          $temp->compositeImage($imagick, \Imagick::COMPOSITE_DEFAULT, intval(($width - $this->dimension[0]) / 2), intval(($height - $this->dimension[1]) / 2));
           $newImage->addImage($temp);
           $newImage->setImageDelay($imagick->getImageDelay());
         } while ($imagick->nextImage());
       } else {
-        $newImage->newImage($width, $height, new ImagickPixel($color));
-        $newImage->compositeImage(clone $this->image, Imagick::COMPOSITE_DEFAULT, intval(($width - $this->dimension[0]) / 2), intval(($height - $this->dimension[1]) / 2));
+        $newImage->newImage($width, $height, new \ImagickPixel($color));
+        $newImage->compositeImage(clone $this->image, \Imagick::COMPOSITE_DEFAULT, intval(($width - $this->dimension[0]) / 2), intval(($height - $this->dimension[1]) / 2));
       }
 
       return $this->_updateImage($newImage);
@@ -877,8 +877,8 @@ namespace Thumbnail {
       count($files) >= 9 || static::error('參數錯誤！檔案數量要大於等於 9，數量：' . count($files));
       $file              || static::error('錯誤的儲存路徑！儲存路徑：' . $file);
 
-      $newImage = new Imagick();
-      $newImage->newImage(266, 200, new ImagickPixel('white'));
+      $newImage = new \Imagick();
+      $newImage->newImage(266, 200, new \ImagickPixel('white'));
       $newImage->setFormat(pathinfo($file, PATHINFO_EXTENSION));
 
       $positions = [
@@ -888,7 +888,7 @@ namespace Thumbnail {
       ];
 
       for ($i = 0, $c = count($positions); $i < $c; $i++)
-        $newImage->compositeImage(static::create($files[$i])->adaptiveResizeQuadrant($positions[$i]['width'], $positions[$i]['height'])->getImage(), Imagick::COMPOSITE_DEFAULT, $positions[$i]['left'], $positions[$i]['top']);
+        $newImage->compositeImage(static::create($files[$i])->adaptiveResizeQuadrant($positions[$i]['width'], $positions[$i]['height'])->getImage(), \Imagick::COMPOSITE_DEFAULT, $positions[$i]['left'], $positions[$i]['top']);
 
       return $newImage->writeImages($file, $adjoin);
     }
@@ -900,8 +900,8 @@ namespace Thumbnail {
       $w = 1200;
       $h = 630;
 
-      $newImage = new Imagick();
-      $newImage->newImage($w, $h, new ImagickPixel('white'));
+      $newImage = new \Imagick();
+      $newImage->newImage($w, $h, new \ImagickPixel('white'));
       $newImage->setFormat(pathinfo ($file, PATHINFO_EXTENSION));
       
       $spacing = 5;
@@ -919,16 +919,16 @@ namespace Thumbnail {
       }
 
       for ($i = 0, $c = count($positions); $i < $c; $i++)
-        $newImage->compositeImage(static::create($files[$i])->adaptiveResizeQuadrant($positions[$i]['width'], $positions[$i]['height'])->getImage(), Imagick::COMPOSITE_DEFAULT, $positions[$i]['left'], $positions[$i]['top']);
+        $newImage->compositeImage(static::create($files[$i])->adaptiveResizeQuadrant($positions[$i]['width'], $positions[$i]['height'])->getImage(), \Imagick::COMPOSITE_DEFAULT, $positions[$i]['left'], $positions[$i]['top']);
 
       return $newImage->writeImages($file, $adjoin);
     }
 
-    public function filter($radius, $sigma, $channel = Imagick::CHANNEL_DEFAULT) {
-      $items = [Imagick::CHANNEL_UNDEFINED, Imagick::CHANNEL_RED,     Imagick::CHANNEL_GRAY,  Imagick::CHANNEL_CYAN,
-                Imagick::CHANNEL_GREEN,     Imagick::CHANNEL_MAGENTA, Imagick::CHANNEL_BLUE,  Imagick::CHANNEL_YELLOW,
-                Imagick::CHANNEL_ALPHA,     Imagick::CHANNEL_OPACITY, Imagick::CHANNEL_BLACK,
-                Imagick::CHANNEL_INDEX,     Imagick::CHANNEL_ALL,     Imagick::CHANNEL_DEFAULT];
+    public function filter($radius, $sigma, $channel = \Imagick::CHANNEL_DEFAULT) {
+      $items = [\Imagick::CHANNEL_UNDEFINED, \Imagick::CHANNEL_RED,     \Imagick::CHANNEL_GRAY,  \Imagick::CHANNEL_CYAN,
+                \Imagick::CHANNEL_GREEN,     \Imagick::CHANNEL_MAGENTA, \Imagick::CHANNEL_BLUE,  \Imagick::CHANNEL_YELLOW,
+                \Imagick::CHANNEL_ALPHA,     \Imagick::CHANNEL_OPACITY, \Imagick::CHANNEL_BLACK,
+                \Imagick::CHANNEL_INDEX,     \Imagick::CHANNEL_ALL,     \Imagick::CHANNEL_DEFAULT];
 
       if (!in_array($channel, $items))
         return $this->log('參數錯誤！', '參數 Channel 格式不正確！', 'Channel：' . $channel);
@@ -939,7 +939,7 @@ namespace Thumbnail {
     }
 
     public function lomography() {
-      $newImage = new Imagick();
+      $newImage = new \Imagick();
       $newImage->setFormat($this->format);
 
       if ($this->format == 'gif') {
@@ -947,12 +947,12 @@ namespace Thumbnail {
         $imagick = $imagick->coalesceImages();
         
         do {
-          $temp = new Imagick();
+          $temp = new \Imagick();
           $imagick->setimagebackgroundcolor('black');
           $imagick->gammaImage(0.75);
           $imagick->vignetteImage(0, max($this->dimension[0], $this->dimension[1]) * 0.2, 0 - ($this->dimension[0] * 0.05), 0 - ($this->dimension[1] * 0.05));
-          $temp->newImage($this->dimension[0], $this->dimension[1], new ImagickPixel('transparent'));
-          $temp->compositeImage($imagick, Imagick::COMPOSITE_DEFAULT, 0, 0);
+          $temp->newImage($this->dimension[0], $this->dimension[1], new \ImagickPixel('transparent'));
+          $temp->compositeImage($imagick, \Imagick::COMPOSITE_DEFAULT, 0, 0);
 
           $newImage->addImage($temp);
           $newImage->setImageDelay($imagick->getImageDelay());
@@ -972,7 +972,7 @@ namespace Thumbnail {
 
       $temp = clone $this->image;
 
-      $temp->quantizeImage($limit, Imagick::COLORSPACE_RGB, 0, false, false );
+      $temp->quantizeImage($limit, \Imagick::COLORSPACE_RGB, 0, false, false );
       $pixels = $temp->getImageHistogram();
 
       $datas = [];
@@ -1008,23 +1008,23 @@ namespace Thumbnail {
       if (!$datas = $this->getAnalysisDatas($limit))
         return $this->log('圖像分析錯誤！');
 
-      $newImage = new Imagick();
+      $newImage = new \Imagick();
 
       foreach ($datas as $data) {
-        $newImage->newImage(400, 20, new ImagickPixel('white'));
+        $newImage->newImage(400, 20, new \ImagickPixel('white'));
 
-        $draw = new ImagickDraw();
+        $draw = new \ImagickDraw();
         $draw->setFont($font);
         $draw->setFontSize($fontSize);
         $newImage->annotateImage($draw, 25, 14, 0, 'Percentage of total pixels : ' . (strlen($data['percent']) < 2 ? ' ':'') . $data['percent'] . '% (' . $data['count'] . ')');
 
-        $tile = new Imagick();
-        $tile->newImage(20, 20, new ImagickPixel('rgb(' . $data['color']['r'] . ',' . $data['color']['g'] . ',' . $data['color']['b'] . ')'));
+        $tile = new \Imagick();
+        $tile->newImage(20, 20, new \ImagickPixel('rgb(' . $data['color']['r'] . ',' . $data['color']['g'] . ',' . $data['color']['b'] . ')'));
 
-        $newImage->compositeImage($tile, Imagick::COMPOSITE_OVER, 0, 0);
+        $newImage->compositeImage($tile, \Imagick::COMPOSITE_OVER, 0, 0);
       }
 
-      $newImage = $newImage->montageImage(new imagickdraw(), '1x' . count($datas) . '+0+0', '400x20+4+2>', Imagick::MONTAGEMODE_UNFRAME, '0x0+3+3');
+      $newImage = $newImage->montageImage(new imagickdraw(), '1x' . count($datas) . '+0+0', '400x20+4+2>', \Imagick::MONTAGEMODE_UNFRAME, '0x0+3+3');
       $newImage->setImageFormat($format);
       $newImage->setFormat($format);
       $newImage->writeImages($file, $adjoin);
@@ -1054,15 +1054,15 @@ namespace Thumbnail {
         return $this->log('產生文字物件失敗！');
 
       if ($this->format == 'gif') {
-        $newImage = new Imagick();
+        $newImage = new \Imagick();
         $newImage->setFormat($this->format);
         $imagick = clone $this->image;
         $imagick = $imagick->coalesceImages();
         
         do {
-          $temp = new Imagick();
-          $temp->newImage($this->dimension[0], $this->dimension[1], new ImagickPixel('transparent'));
-          $temp->compositeImage($imagick, Imagick::COMPOSITE_DEFAULT, 0, 0);
+          $temp = new \Imagick();
+          $temp->newImage($this->dimension[0], $this->dimension[1], new \ImagickPixel('transparent'));
+          $temp->compositeImage($imagick, \Imagick::COMPOSITE_DEFAULT, 0, 0);
           $temp->annotateImage($draw, $startX, $startY, $degree, $text);
           $newImage->addImage($temp);
           $newImage->setImageDelay($imagick->getImageDelay());
