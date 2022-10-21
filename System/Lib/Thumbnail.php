@@ -960,7 +960,7 @@ namespace Thumbnail {
 
       $temp = clone $this->image;
       $dimension = $this->getDimension($temp);
-      $dimension = $this->calcImageSize($dimension, $this->createNewDimension($d = round($limit * 2), $d));
+      $dimension = $this->calcImageSize($dimension, $this->createNewDimension(64, 64));
 
       $temp = $temp->coalesceImages();
       if ($this->format == 'gif')
