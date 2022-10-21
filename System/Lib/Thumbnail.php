@@ -960,7 +960,7 @@ namespace Thumbnail {
 
       $temp = clone $this->image;
       $dimension = $this->getDimension($temp);
-      $dimension = $this->calcImageSize($dimension, $this->createNewDimension($limit, $limit));
+      $dimension = $this->calcImageSize($dimension, $this->createNewDimension($d = round($limit * 2), $d));
 
       $temp = $temp->coalesceImages();
       if ($this->format == 'gif')
@@ -1026,7 +1026,11 @@ namespace Thumbnail {
       $max = array_sum(array_column($colors, 'count'));
       $colors = array_map(function($newColor) use ($max) {
         return [
-          'color' => $newColor['color'],
+          'rgb' => [
+            (int)$newColor['color']['r'],
+            (int)$newColor['color']['g'],
+            (int)$newColor['color']['b'],
+          ],
           'percent' => $max > 0 ? round(($newColor['count'] / $max) * 100, 1) : 0,
         ];
       }, $colors);
@@ -1062,10 +1066,10 @@ namespace Thumbnail {
         $draw = new \ImagickDraw();
         $draw->setFont($font);
         $draw->setFontSize($fontSize);
-        $newImage->annotateImage($draw, 25, 14, 0, 'rgb(' . $data['color']['r'] . ',' . $data['color']['g'] . ',' . $data['color']['b'] . ') ' . $data['percent'] . '%');
+        $newImage->annotateImage($draw, 25, 14, 0, 'rgb(' . $data['rgb'][0] . ',' . $data['rgb'][1] . ',' . $data['rgb'][2] . ') ' . $data['percent'] . '%');
 
         $tile = new \Imagick();
-        $tile->newImage(20, 20, new \ImagickPixel('rgb(' . $data['color']['r'] . ',' . $data['color']['g'] . ',' . $data['color']['b'] . ')'));
+        $tile->newImage(20, 20, new \ImagickPixel('rgb(' . $data['rgb'][0] . ',' . $data['rgb'][1] . ',' . $data['rgb'][2] . ')'));
 
         $newImage->compositeImage($tile, \Imagick::COMPOSITE_OVER, 0, 0);
       }
