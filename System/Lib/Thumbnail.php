@@ -954,13 +954,13 @@ namespace Thumbnail {
       return $this->_updateImage($newImage);
     }
 
-    public function getAnalysisDatas($limit = 10) {
+    public function getAnalysisDatas($limit = 10, $range = 69.28203222525013) {
       if ($limit <= 0 && $this->log('參數錯誤！', '分析數量一定要大於 0', '分析數量：' . $limit))
         return [];
 
       $temp = clone $this->image;
       $dimension = $this->getDimension($temp);
-      $dimension = $this->calcWidth($dimension, $this->createNewDimension($s = ceil(sqrt($limit)), $s));
+      $dimension = $this->calcImageSize($dimension, $this->createNewDimension($limit, $limit));
 
       $temp = $temp->coalesceImages();
       if ($this->format == 'gif')
@@ -969,42 +969,52 @@ namespace Thumbnail {
       else
         $temp->thumbnailImage($dimension[0], $dimension[1], false);
 
-      $colors = [];
+      $pixels = [];
 
       $it = $temp->getPixelIterator();
       $it->resetIterator();
       while ($row = $it->getNextIteratorRow())
         foreach ($row as $pixel)
-          array_push($colors, $pixel->getColor());
+          array_push($pixels, $pixel->getColor());
 
-      $newColors = [];
-      $unit = 2;
-      foreach ($colors as $color) {
-        $r = $color['r'];
-        $g = $color['g'];
-        $b = $color['b'];
-        if (!$newColors) {
-          array_push($newColors, ['color' => ['r' => $r, 'g' => $g, 'b' => $b], 'colors' => [['r' => $r, 'g' => $g, 'b' => $b]]]);
+      $p1 = array_splice($pixels, 0, count($pixels) / 2);
+      $p1 = array_reverse($p1);
+      $p2 = array_values($pixels);
+      $c = max(count($p1), count($p2));
+      $pixels = [];
+      for ($i = 0; $i < $c; $i++) {
+        isset($p2[$i]) && array_push($pixels, $p2[$i]);
+        isset($p1[$i]) && array_push($pixels, $p1[$i]);
+      }
+
+      $colors = [];
+      foreach ($pixels as $pixel) {
+        $r = $pixel['r'];
+        $g = $pixel['g'];
+        $b = $pixel['b'];
+
+        if (!$colors) {
+          array_push($colors, ['color' => ['r' => $r, 'g' => $g, 'b' => $b], 'colors' => [['r' => $r, 'g' => $g, 'b' => $b]]]);
           continue;
         }
-        
-        // 最長距離 441.67295593006
+  
+        // 最長距離 441.6729555992689
 
-        $c = count($newColors);
+        $c = count($colors);
         $x = false;
         for ($i = 0; $i < $c; $i++) {
-          $color = $newColors[$i]['color'];
+          $color = $colors[$i]['color'];
           $val = abs(sqrt(pow($color['r'] - $r, 2) + pow($color['g'] - $g, 2) + pow($color['b'] - $b, 2)));
-          if ($val < 70) {
+          if ($val <= $range) {
             $x = true;
-            array_push($newColors[$i]['colors'], ['r' => $r, 'g' => $g, 'b' => $b]);
+            array_push($colors[$i]['colors'], ['r' => $r, 'g' => $g, 'b' => $b]);
             break;
           }
         }
-        $x || array_push($newColors, ['color' => ['r' => $r, 'g' => $g, 'b' => $b], 'colors' => [['r' => $r, 'g' => $g, 'b' => $b]]]);
+        $x || array_push($colors, ['color' => ['r' => $r, 'g' => $g, 'b' => $b], 'colors' => [['r' => $r, 'g' => $g, 'b' => $b]]]);
       }
 
-      $newColors = array_map(function($newColor) {
+      $colors = array_map(function($newColor) {
         $r = ($c = count($tmps = array_column($newColor['colors'], 'r'))) > 0 ? round(array_sum($tmps) / $c) : 0;
         $g = ($c = count($tmps = array_column($newColor['colors'], 'g'))) > 0 ? round(array_sum($tmps) / $c) : 0;
         $b = ($c = count($tmps = array_column($newColor['colors'], 'b'))) > 0 ? round(array_sum($tmps) / $c) : 0;
@@ -1012,18 +1022,17 @@ namespace Thumbnail {
           'color' => ['r' => $r, 'g' => $g, 'b' => $b],
           'count' => count($newColor['colors']),
         ];
-      }, $newColors);
-      $max = array_sum(array_column($newColors, 'count'));
-      $newColors = array_map(function($newColor) use ($max) {
+      }, $colors);
+      $max = array_sum(array_column($colors, 'count'));
+      $colors = array_map(function($newColor) use ($max) {
         return [
           'color' => $newColor['color'],
-          'percent' => $max > 0 ? round(($newColor['count'] / $max) * 100) : 0,
+          'percent' => $max > 0 ? round(($newColor['count'] / $max) * 100, 1) : 0,
         ];
-      }, $newColors);
+      }, $colors);
 
-      usort($newColors, function($a, $b) { return $b['percent'] - $a['percent']; });
-
-      return array_slice($newColors, 0, $limit);
+      usort($colors, function($a, $b) { return $b['percent'] - $a['percent']; });
+      return array_slice($colors, 0, $limit);
     }
 
     public function saveAnalysisChart($file, $font, $limit = 10, $fontSize = 14, $adjoin = true) {
