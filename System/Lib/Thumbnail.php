@@ -1025,11 +1025,15 @@ namespace Thumbnail {
       }, $colors);
       $max = array_sum(array_column($colors, 'count'));
       $colors = array_map(function($newColor) use ($max) {
+        $r = (int)$newColor['color']['r'];
+        $g = (int)$newColor['color']['g'];
+        $b = (int)$newColor['color']['b'];
+
         return [
           'rgb' => [
-            (int)$newColor['color']['r'],
-            (int)$newColor['color']['g'],
-            (int)$newColor['color']['b'],
+            $r > -1 ? $r < 256 ? $r : 255 : 0,
+            $g > -1 ? $g < 256 ? $g : 255 : 0,
+            $b > -1 ? $b < 256 ? $b : 255 : 0,
           ],
           'percent' => $max > 0 ? round(($newColor['count'] / $max) * 100, 1) : 0,
         ];
