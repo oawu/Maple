@@ -318,10 +318,15 @@ namespace Valid\Rule {
   class _String extends Rule {
     use minmax;
 
+    private $_removeHTML = false;
     private $_isEmptyStringIsNull = false;
     
     public function emptyStringIsNull($val = true) {
       $this->_isEmptyStringIsNull = $val;
+      return $this;
+    }
+    public function removeHTML($val = true) {
+      $this->_removeHTML = $val;
       return $this;
     }
 
@@ -337,7 +342,9 @@ namespace Valid\Rule {
         $this->_val !== null || $this->error('為必要');
 
       is_numeric($this->_val) || is_string($this->_val) || (is_object($this->_val) && method_exists($this->_val, '__toString')) || $this->error('必須是「字串」格式');
-      $this->_val = strip_tags(trim('' . $this->_val, " \t\n\r\0\x0B"));
+      $this->_val = $this->_removeHTML
+        ? strip_tags(trim('' . $this->_val, " \t\n\r\0\x0B"))
+        : trim('' . $this->_val, " \t\n\r\0\x0B");
 
       $this->getOptional()
         && $this->_val === ''
