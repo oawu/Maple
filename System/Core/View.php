@@ -13,7 +13,7 @@ class View {
     if ($path === null)
       return $this->path;
 
-    $ext  = pathinfo($path, PATHINFO_EXTENSION) != 'php' ? '.php' : '';
+    $ext  = pathinfo($path, PATHINFO_EXTENSION) == '' ? '.php' : '';
     $path = $path . $ext;
 
     $path = !realpath($path) || !preg_match("/^\\" . DIRECTORY_SEPARATOR . "/", $path)

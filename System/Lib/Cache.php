@@ -242,6 +242,10 @@ namespace {
       return $data;
     }
 
+    public static function fileClean($key = null) {
+      self::$file || self::$file = new \Cache\File();
+      return $key === null ? self::$file->clean() : self::$file->delete($key);
+    }
     public static function redis($key, $ttl, $closure) {
       self::$redis || self::$redis = new \Cache\Redis();
 
@@ -255,6 +259,10 @@ namespace {
         : $closure, $ttl) || \Log::warning('Cache::redis 錯誤，Save 失敗！');
 
       return $data;
+    }
+    public static function redisClean($key = null) {
+      self::$redis || self::$redis = new \Cache\Redis();
+      return $key === null ? self::$redis->clean() : self::$redis->delete($key);
     }
   }
 }
