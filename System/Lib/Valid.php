@@ -362,7 +362,19 @@ namespace Valid\Rule {
   }
 
   final class _Bool extends Rule {
+    private $_isEmptyStringIsNull = false;
+    
+    public function emptyStringIsNull($val = true) {
+      $this->_isEmptyStringIsNull = $val;
+      return $this;
+    }
+
     public function getVal() {
+      $this->getOptional()
+        && $this->_val === ''
+        && $this->_isEmptyStringIsNull === true
+        && $this->_val = null;
+
       if ($this->isOptionalAndValIsNull())
         return $this->_val = null;
       else
@@ -463,6 +475,7 @@ namespace Valid\Rule {
   }
   final class _Array extends Rule {
     private $_type = null;
+    private $_isEmptyStringIsNull = false;
     use minmax;
 
     public function __construct($optional) {
@@ -486,7 +499,17 @@ namespace Valid\Rule {
       is_array($tmp) && $this->_type = Model::create($tmp);
       return $this;
     }
+    public function emptyStringIsNull($val = true) {
+      $this->_isEmptyStringIsNull = $val;
+      return $this;
+    }
+
     public function getVal() {
+      $this->getOptional()
+        && $this->_val === ''
+        && $this->_isEmptyStringIsNull === true
+        && $this->_val = null;
+
       if ($this->isOptionalAndValIsNull())
         return $this->_val = null;
       else
@@ -513,7 +536,18 @@ namespace Valid\Rule {
     }
   }
   final class _Any extends Rule {
+    private $_isEmptyStringIsNull = false;
+    
+    public function emptyStringIsNull($val = true) {
+      $this->_isEmptyStringIsNull = $val;
+      return $this;
+    }
     public function getVal() {
+      $this->getOptional()
+        && $this->_val === ''
+        && $this->_isEmptyStringIsNull === true
+        && $this->_val = null;
+
       if ($this->isOptionalAndValIsNull())
         return $this->_val = null;
       else
@@ -524,6 +558,7 @@ namespace Valid\Rule {
   }
   final class _Object extends Rule {
     private $_model = null;
+    private $_isEmptyStringIsNull = false;
 
     public function __construct($optional) {
       $args = func_get_args();
@@ -546,8 +581,18 @@ namespace Valid\Rule {
       is_array($tmp) && $this->_model = Model::create($tmp);
       return $this;
     }
+    
+    public function emptyStringIsNull($val = true) {
+      $this->_isEmptyStringIsNull = $val;
+      return $this;
+    }
 
     public function getVal() {
+      $this->getOptional()
+        && $this->_val === ''
+        && $this->_isEmptyStringIsNull === true
+        && $this->_val = null;
+
       if ($this->isOptionalAndValIsNull())
         return $this->_val = null;
       else
