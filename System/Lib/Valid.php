@@ -18,10 +18,10 @@ namespace {
 
       switch ($name) {
         case 'int':       case 'int_':       return call_user_func_array('\Valid\Rule\Num\_Int::create', $params);
-        case 'int8':      case 'int8_':      return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->max(127);
-        case 'int16':     case 'int16_':     return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->max(32767);
-        case 'int32':     case 'int32_':     return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->max(2147483647);
-        case 'int64':     case 'int64_':     return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->max(9223372036854775807);
+        case 'int8':      case 'int8_':      return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(-127)->max(127);
+        case 'int16':     case 'int16_':     return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(-32767)->max(32767);
+        case 'int32':     case 'int32_':     return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(-2147483647)->max(2147483647);
+        case 'int64':     case 'int64_':     return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(-9223372036854775807)->max(9223372036854775807);
         case 'uInt':      case 'uInt_':      return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(0);
         case 'uInt8':     case 'uInt8_':     return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(0)->max(255);
         case 'uInt16':    case 'uInt16_':    return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(0)->max(65535);
