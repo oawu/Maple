@@ -26,8 +26,8 @@ namespace {
         case 'uInt8':     case 'uInt8_':     return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(0)->max(255);
         case 'uInt16':    case 'uInt16_':    return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(0)->max(65535);
         case 'uInt32':    case 'uInt32_':    return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(0)->max(4294967295);
-        case 'uInt64':    case 'uInt64_':    return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(0)->max(18446744073709551616);
-        case 'id':        case 'id_':        return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(1)->max(18446744073709551616);
+        case 'uInt64':    case 'uInt64_':    return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(0)->max(18446744073709551615);
+        case 'id':        case 'id_':        return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(1)->max(18446744073709551615);
         case 'timestamp': case 'timestamp_': return call_user_func_array('\Valid\Rule\Num\_Int::create', $params)->min(0);
         case 'float':     case 'float_':     return call_user_func_array('\Valid\Rule\Num\_Float::create', $params);
         case 'uFloat':    case 'uFloat_':    return call_user_func_array('\Valid\Rule\Num\_Float::create', $params)->min(0);
