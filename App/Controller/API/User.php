@@ -22,7 +22,7 @@ class User extends Controller {
     $to = array_shift($users);
 
     $to->owner = $me->name;
-    $to->save();
+    ENVIRONMENT == 'Production' && $to->save();
 
     return [
       'id' => $to->id,
