@@ -33,11 +33,12 @@ class User extends Controller {
   }
 
   public function index() {
+    $names = array_keys(\M\User::where('owner', '!=', '')->select('owner')->keyBy('owner')->all());
     return array_map(function($user) {
       return [
         'id' => $user->id,
         'name' => $user->name,
       ];
-    }, \M\User::where('owner', '=', '')->all());
+    }, $names ? \M\User::notIn('name', $names)->all() : \M\User::all());
   }
 }
