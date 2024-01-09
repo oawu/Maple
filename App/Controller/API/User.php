@@ -14,21 +14,22 @@ class User extends Controller {
 
     \M\User::where('owner', '=', $me->name)->one() && error('你已經挑選過囉！');
 
-    $users = \M\User::where('owner', '=', '')->where('id', '!=', $me->id)->all();
+    $users = \M\User::where('owner', '=', '')->where('id', '!=', $me->id)->keyBy('id')->all();
     $users || error('發生錯誤了，請大家重新抽先吧！');
 
     shuffle($users);
-
     $to = array_shift($users);
+    $to || error('發生錯誤了，請大家重新抽先吧！')
 
     $to->owner = $me->name;
-    ENVIRONMENT == 'Production' && $to->save();
+    $to->save();
 
     return [
       'id' => $to->id,
       'name' => $to->name,
       'tip' => $to->tip,
       'address' => $to->address,
+      'phone' => $to->phone,
     ];
   }
 
