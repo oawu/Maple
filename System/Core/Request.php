@@ -5,12 +5,12 @@ abstract class Request {
   private static $method = null;
   private static $segments = null;
   private static $params = null;
-  
+
   private static $ip = null;
   private static $headers = null;
   private static $input = null;
   private static $hasSanitizeGlobals = null;
-  
+
   public static $obj = null;
 
   public static function clean() {
@@ -18,19 +18,20 @@ abstract class Request {
     self::$router = null;
     self::$segments = null;
     self::$params = null;
-  
+
     self::$ip = null;
     self::$headers = null;
     self::$input = null;
     self::$hasSanitizeGlobals = null;
-  
+
     return true;
   }
 
   public static function headers($index = null, $xssClean = true) {
     $tmp = function($headers, $index) {
-      if ($index === null)
+      if ($index === null) {
         return $headers;
+      }
 
       $headers = array_change_key_case($headers, CASE_LOWER);
       $index = strtolower($index);
@@ -38,31 +39,40 @@ abstract class Request {
       return $headers[$index] ?? null;
     };
 
-    if (self::$headers !== null)
+    if (self::$headers !== null) {
       return $tmp(self::fetchFromArray(self::$headers, null, $xssClean), $index);
+    }
 
     if (function_exists('apache_request_headers')) {
-      self::$headers = apache_request_headers();
+      self::$headers = [];
+      foreach (apache_request_headers() as $key => $value) {
+        self::$headers[ucwords($key, '-')] = $value;
+      }
     } else {
       isset($_SERVER['CONTENT_TYPE']) && self::$headers['Content-Type'] = $_SERVER['CONTENT_TYPE'];
 
-      foreach ($_SERVER as $key => $val)
-        if (sscanf($key, 'HTTP_%s', $header) === 1)
-          self::$headers[str_replace(' ', '-', ucwords(str_replace('_', ' ', strtolower($header))))] = $_SERVER[$key];
+      foreach ($_SERVER as $key => $val) {
+        if (sscanf($key, 'HTTP_%s', $header) === 1) {
+          self::$headers[str_replace(' ', '-', ucwords(strtolower($header), ' '))] = $_SERVER[$key];
+        }
+      }
     }
 
     return $tmp(self::fetchFromArray(self::$headers, null, $xssClean), $index);
   }
 
   public static function ip() {
-    if (self::$ip !== null)
+    if (self::$ip !== null) {
       return self::$ip;
+    }
 
     self::$ip = self::servers('REMOTE_ADDR');
 
-    return !self::validIp(self::$ip)
-      ? self::$ip = '0.0.0.0'
-      : self::$ip;
+    if (!self::validIp(self::$ip)) {
+      self::$ip = '0.0.0.0';
+    }
+
+    return self::$ip;
   }
 
   public static function userAgent($xssClean = null) {
@@ -74,60 +84,82 @@ abstract class Request {
   }
 
   public static function setCookie($name, $value, $expire = 0, $domain = null, $path = null, $prefix = null, $secure = null, $httponly = null) {
-    if (is_array($name))
-      foreach (['value', 'expire', 'domain', 'path', 'prefix', 'secure', 'httponly', 'name'] as $item)
-        if (isset($name[$item]))
+    if (is_array($name)) {
+      foreach (['value', 'expire', 'domain', 'path', 'prefix', 'secure', 'httponly', 'name'] as $item) {
+        if (isset($name[$item])) {
           $$item = $name[$item];
+        }
+      }
+    }
+    if ($prefix === null) { $prefix = config('Cookie', 'prefix'); }
+    if ($domain === null) { $domain = config('Cookie', 'domain'); }
+    if ($secure === null) { $secure = config('Cookie', 'secure'); }
+    if ($path === null) { $path = config('Cookie', 'path'); }
+    if ($httponly === null) { $httponly = config('Cookie', 'httponly'); }
 
-    $prefix   !== null || $prefix   = config('Cookie', 'prefix');
-    $domain   !== null || $domain   = config('Cookie', 'domain');
-    $secure   !== null || $secure   = config('Cookie', 'secure');
-    $path     !== null || $path     = config('Cookie', 'path');
-    $httponly !== null || $httponly = config('Cookie', 'httponly');
     $expire = time() + $expire;
 
     setcookie($prefix . $name, $value, $expire, $path, $domain, $secure, $httponly);
   }
 
   private static function cleanInputKeys($str, $fatal = true) {
-    if (!preg_match('/^[a-z0-9:_\/|-]+$/i', $str))
-      return $fatal === true ? GG('有不合法的字元！', 503) : false;
-      
-    return UTF8_ENABLED === true ? cleanStr($str) : $str;
+    if (!preg_match('/^[a-z0-9:_\/|-]+$/i', $str)) {
+      if ($fatal === true) {
+        return GG('有不合法的字元！', 503);
+      }
+      return false;
+    }
+
+    if (UTF8_ENABLED === true) {
+      return cleanStr($str);
+    }
+
+    return $str;
   }
 
   private static function cleanInputData($str) {
     if (is_array ($str)) {
       $t = [];
-      foreach (array_keys($str) as $key)
+      foreach (array_keys($str) as $key) {
         $t[self::cleanInputKeys($key)] = self::cleanInputData($str[$key]);
+      }
       return $t;
     }
 
-    UTF8_ENABLED !== true || $str = cleanStr($str);
+    if (UTF8_ENABLED === true) {
+      $str = cleanStr($str);
+    }
+
     $str = Security::removeInvisibleCharacters($str, false);
 
     return preg_replace('/(?:\r\n|[\r\n])/', PHP_EOL, $str);
   }
 
   private static function sanitizeGlobals() {
-    if (self::$hasSanitizeGlobals) return ;
+    if (self::$hasSanitizeGlobals) {
+      return ;
+    }
 
-    foreach ($_GET as $key => $val)
+    foreach ($_GET as $key => $val) {
       $_GET[self::cleanInputKeys($key)] = self::cleanInputData($val);
+    }
 
-    if (is_array($_POST))
-      foreach ($_POST as $key => $val)
+    if (is_array($_POST)) {
+      foreach ($_POST as $key => $val) {
         $_POST[self::cleanInputKeys($key)] = self::cleanInputData($val);
+      }
+    }
 
     if (is_array($_COOKIE)) {
       unset($_COOKIE['$Version'], $_COOKIE['$Path'], $_COOKIE['$Domain']);
 
-      foreach ($_COOKIE as $key => $val)
-        if (($cookieKey = self::cleanInputKeys($key)) !== false)
+      foreach ($_COOKIE as $key => $val) {
+        if (($cookieKey = self::cleanInputKeys($key)) !== false) {
           $_COOKIE[$cookieKey] = self::cleanInputData($val);
-        else
+        } else {
           unset($_COOKIE[$key]);
+        }
+      }
     }
 
     $_SERVER['PHP_SELF'] = strip_tags($_SERVER['PHP_SELF']);
@@ -142,31 +174,38 @@ abstract class Request {
 
     if (is_array($index)) {
       $output = [];
-      foreach ($index as $key)
+      foreach ($index as $key) {
         $output[$key] = self::fetchFromArray($array, $key, $xssClean);
+      }
       return $output;
     }
 
-    if (isset ($array[$index])) {
+    if (isset($array[$index])) {
       $value = $array[$index];
     } else if (($count = preg_match_all('/(?:^[^\[]+)|\[[^]]*\]/', $index, $matches)) > 1) {
       $value = $array;
 
       for ($i = 0; $i < $count; $i++) {
         $key = trim($matches[0][$i], '[]');
-        if ($key === '')
-          break;
 
-        if (isset ($value[$key]))
+        if ($key === '') {
+          break;
+        }
+
+        if (isset($value[$key])) {
           $value = $value[$key];
-        else
+        } else {
           return null;
+        }
       }
     } else {
       return null;
     }
 
-    $xssClean !== null || $xssClean = config('Other', 'globalXssFiltering');
+    if ($xssClean === null) {
+      $xssClean = config('Other', 'globalXssFiltering');
+    }
+
     return $xssClean ? Security::xssClean($value) : $value;
   }
 
@@ -199,18 +238,46 @@ abstract class Request {
   }
 
   public static function segments() {
-    return self::$segments ?? self::$segments = array_values(array_map(function ($t) { return urldecode($t); }, self::method() != 'cli'
-      ? ($tmp = parse_url('http://__' . $_SERVER['REQUEST_URI'])) && isset($tmp['path'])
-        ? array_filter(explode('/', $tmp['path']), function($t) { return $t !== ''; })
-        : []
-      : arrayFlatten(array_map(function($argv) { return explode('/', $argv); }, array_slice($_SERVER['argv'], 1)))
-    ));
+    if (self::$segments === null) {
+      $segments = [];
+
+      if (self::method() == 'cli') {
+        $segments = arrayFlatten(array_map(function($argv) { return explode('/', $argv); }, array_slice($_SERVER['argv'], 1)));
+      } else {
+        $tmp = parse_url('http://__' . $_SERVER['REQUEST_URI']);
+        if ($tmp && isset($tmp['path'])) {
+          $segments = array_filter(explode('/', $tmp['path']), function($t) { return $t !== ''; });
+        }
+      }
+
+      self::$segments = array_values(array_map(function ($t) {
+        return urldecode($t);
+      }, $segments));
+    }
+
+    return self::$segments;
   }
 
   public static function method() {
-    return self::$method ?? self::$method = strtolower(PHP_SAPI === 'cli' || defined('STDIN')
-      ? 'cli'
-      : ($_POST['_method'] ?? $_SERVER['REQUEST_METHOD'] ?? 'get'));
+    if (self::$method === null) {
+      $method = 'get';
+
+      if (PHP_SAPI === 'cli' || defined('STDIN')) {
+        $method = 'cli';
+      }
+
+      if (isset($_POST['_method'])) {
+        $method = strtolower($_POST['_method']);
+      }
+
+      if (isset($_SERVER['REQUEST_METHOD'])) {
+        $method = strtolower($_SERVER['REQUEST_METHOD']);
+      }
+
+      self::$method = $method;
+    }
+
+    return self::$method;
   }
 
   public static function notFound() {
@@ -223,17 +290,22 @@ abstract class Request {
     $return = null;
 
     foreach (self::$router->mids() as $mid) {
-      strpos($mid, '@') !== false || $mid = $mid . '@' . 'index';
+      if (strpos($mid, '@') === false) {
+        $mid = $mid . '@' . 'index';
+      }
+
       list($class, $method) = explode('@', $mid);
 
-      if (!Load::middleware($class))
+      if (!Load::middleware($class)) {
         return self::notFound('載入 Middleware Class 失敗！', '路徑：' . PATH_APP_MIDDLEWARE . $class . '.php');
-      
+      }
+
       $className = '\\Middleware\\' . $class;
       $mid = new $className();
 
-      if (!method_exists($mid, $method))
+      if (!method_exists($mid, $method)) {
         return self::notFound('Middleware 沒有「' . $method . '」method！', '路徑：' . PATH_APP_MIDDLEWARE . $className . '.php');
+      }
 
       try {
         $mid->$method($return);
@@ -249,15 +321,17 @@ abstract class Request {
     Router::init();
     $allRouter = &Router::all();
 
-    if (!isset($allRouter[self::method()]))
+    if (!isset($allRouter[self::method()])) {
       return self::notFound('Router 內沒有此 Method，此次請求為：' . self::method());
+    }
 
     foreach ($allRouter[self::$method] as $segment => $obj) {
       if (preg_match('#^' . $segment . '$#', implode('/', self::segments()), $matches)) {
 
         self::$params = [];
-        foreach (array_filter(array_keys($matches), 'is_string') as $key)
+        foreach (array_filter(array_keys($matches), 'is_string') as $key) {
           self::$params[$key] = $matches[$key];
+        }
 
         self::$router =& $obj;
 
@@ -292,20 +366,25 @@ abstract class Request {
     $class = self::$router->class();
     $method = self::$router->method();
 
-    if (!isset($path, $class, $method))
+    if (!isset($path, $class, $method)) {
       return self::notFound('找不到 Router 基本參數！', '路徑：' . $path . '.php', 'Class：' . $class, 'Method：' . $method);
+    }
 
-    if (!Load::controller($path))
+    if (!Load::controller($path)) {
       return self::notFound('載入 Controller Class 失敗！', '路徑：' . $path . '.php');
+    }
 
-    if (!class_exists($class))
+    if (!class_exists($class)) {
       return self::notFound('Controller Class 不存在！', '請檢查「' . $path . '.php」檔案的 Class 名稱是否正確！');
+    }
 
     $result = null;
     try {
       $obj = new $class($middleware);
 
-      method_exists($obj, $method) || GG('迷路惹！', 404);
+      if (!method_exists($obj, $method)) {
+        GG('迷路惹！', 404);
+      }
 
       Log::benchmark('ExecController');
       $result = call_user_func_array([self::$obj =& $obj, $method], Request::params());
@@ -336,8 +415,11 @@ abstract class Request {
     }
 
     $type = Request::headers('Content-Type');
+
     if (substr($type, 0, strpos($type, ";")) != 'multipart/form-data') {
-      return self::$input = ['forms' => [], 'files' => []];
+      return self::$input = [
+        'forms' => [],
+        'files' => []];
     }
 
     $forms = [];
@@ -345,8 +427,9 @@ abstract class Request {
     $parts = array_slice(explode($boundary, $body), 1);
 
     foreach ($parts as $part) {
-      if ($part == "--\r\n" || $part == "--")
+      if ($part == "--\r\n" || $part == "--") {
         break;
+      }
 
       $part = ltrim($part, "\r\n");
       list($rawHeaders, $body) = explode("\r\n\r\n", $part, 2);
@@ -359,15 +442,16 @@ abstract class Request {
         $headers[strtolower($name)] = ltrim($value, ' ');
       }
 
-      if (!(isset($headers['content-disposition']) && ($content = $headers['content-disposition'])))
+      if (!(isset($headers['content-disposition']) && ($content = $headers['content-disposition']))) {
         break;
+      }
 
       $filename = null;
       $tmpname = null;
 
       preg_match('/^(.+); *name="([^"]+)"(; *filename="([^"]+)")?/', $content, $matches);
       list(, , $key) = $matches;
-      
+
       if (!isset($matches[4])) {
         array_push($forms, urlencode($key) . '=' . urlencode(substr($body, 0, strlen($body) - 2)));
         continue;
@@ -375,7 +459,16 @@ abstract class Request {
 
       $tmpName = tempnam(ini_get('upload_tmp_dir'), pathinfo($matches[4], PATHINFO_FILENAME));
       $bytes = @file_put_contents($tmpName, $body);
-      $bytes === false || array_push($files, urlencode($key) . '=' . urlencode(json_encode(['name' => $matches[4], 'type' => trim($value), 'tmp_name' => $tmpName, 'error' => 0, 'size' => strlen($body)])));
+
+      if ($bytes !== false) {
+        array_push($files, urlencode($key) . '=' . urlencode(json_encode([
+          'name' => $matches[4],
+          'type' => trim($value),
+          'tmp_name' => $tmpName,
+          'error' => 0,
+          'size' => strlen($body)
+        ])));
+      }
     }
 
     parse_str(implode('&', $files), $files);
@@ -384,28 +477,32 @@ abstract class Request {
     parse_str(implode('&', $forms), $forms);
     return self::$input = ['forms' => $forms, 'files' => $files];
   }
-  
+
   private static function cover1($files) {
     $new = [];
-    foreach ($files as $key => $file)
+    foreach ($files as $key => $file) {
       $new[$key] = is_array($file) ? self::cover1($file) : json_decode($file, true);
+    }
     return $new;
   }
 
   private static function cover2($array, $prefix = '') {
     $result = [];
-    if(is_array($array))
-      foreach($array as $key => $value)
+    if(is_array($array)) {
+      foreach($array as $key => $value) {
         $result = $result + self::cover2($value, $prefix . '[' . $key . ']');
-    else
+      }
+    } else {
       $result[$prefix] = $array;
+    }
 
     return $result;
   }
 
   public static function forms($index = null, $xssClean = true) {
-    if (Request::method() == 'post')
+    if (Request::method() == 'post') {
       return self::fetchFromArray($_POST, $index, $xssClean);
+    }
     self::parseInput('form');
     return self::fetchFromArray(self::$input['forms'], $index, $xssClean);
   }
@@ -417,16 +514,19 @@ abstract class Request {
     }
 
     $news = [];
-    foreach ($_FILES as $key1 => $file)
-      foreach ($file as $type => $val1)
+    foreach ($_FILES as $key1 => $file) {
+      foreach ($file as $type => $val1) {
         foreach (self::cover2($val1, $key1) as $key2 => $val2) {
           $news[$key2] ?? $news[$key2] = [];
           $news[$key2][$type] = $val2;
         }
+      }
+    }
 
     $files = [];
-    foreach ($news as $key => $new)
+    foreach ($news as $key => $new) {
       array_push($files, urlencode($key) . '=' . urlencode(json_encode($new)));
+    }
 
     parse_str(implode('&', $files), $files);
     return self::cover1($files);
@@ -437,12 +537,16 @@ abstract class Request {
   }
 
   public static function rawText() {
-    if (!in_array(Request::headers('Content-Type'), ['text/plain', 'application/json'])) return null;
+    if (!in_array(Request::headers('Content-Type'), ['text/plain', 'application/json'])) {
+      return null;
+    }
     return self::inputStream();
   }
 
   public static function rawJson() {
-    if (!in_array(Request::headers('Content-Type'), ['application/json'])) return null;
+    if (!in_array(Request::headers('Content-Type'), ['application/json'])) {
+      return null;
+    }
     $body = self::inputStream();
     return isJson($body) ? $body : null;
   }
@@ -450,7 +554,9 @@ abstract class Request {
   private static function inputStream($index = null, $xssClean = null) {
     $body = '';
     $data = fopen('php://input', 'r');
-    while ($chunk = fread($data, 1024)) $body .= $chunk;
+    while ($chunk = fread($data, 1024)) {
+      $body .= $chunk;
+    }
     fclose($data);
     return $body;
   }
@@ -463,10 +569,10 @@ if (!function_exists('baseURL')) {
     if ($baseURL === null) {
       $baseURL = config('Other', 'baseURL');
 
-      if ($baseURL === null && isset($_SERVER['HTTP_HOST']))
-        $baseURL = (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off'
-          ? 'https'
-          : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/';
+      if ($baseURL === null && isset($_SERVER['HTTP_HOST'])) {
+        $protocol = isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off' ? 'https' : 'http';
+        $baseURL = $protocol . '://' . $_SERVER['HTTP_HOST'] . '/';
+      }
 
       $baseURL || QQ('尚未設定 baseURL！', '請先至 config/[環境/]Other.php 內設定 baseURL');
       $baseURL = rtrim($baseURL, '/') . '/';
