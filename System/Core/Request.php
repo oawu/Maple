@@ -398,79 +398,73 @@ abstract class Request {
   }
 
   private static function parseInput() {
-    if (isset(self::$input)) return self::$input;
-
-    $body = self::inputStream();
-
-    $boundary = substr($body, 0, strpos($body, "\r\n"));
-
-    if (empty($boundary)) {
-      $header = Request::headers('Content-Type');
-      $header = explode(';', $header);
-      $header = array_shift($header);
-      if ($header === 'application/x-www-form-urlencoded') {
-        parse_str($body, $data);
-        return self::$input = ['forms' => $data, 'files' => []];
-      }
+    if (isset(self::$input)) {
+      return self::$input;
     }
 
-    $type = Request::headers('Content-Type');
+    $contentType = Request::headers('Content-Type');
 
-    if (substr($type, 0, strpos($type, ";")) != 'multipart/form-data') {
-      return self::$input = [
-        'forms' => [],
-        'files' => []];
+    $result = preg_match('/^\s*(?P<type>application\/x-www-form-urlencoded)(\s*;\s*)?(?P<other>.*)?\s*$/i', $contentType, $matches);
+    if ($result && $matches && $matches['type']) {
+      $payload = self::inputStream();
+      parse_str($payload, $data);
+      return self::$input = ['forms' => $data, 'files' => []];
     }
+
+    $result = preg_match('/^\s*(?P<type>multipart\/form-data)(\s*;\s*)?boundary=(?P<boundary>.*)?\s*$/i', $contentType, $matches);
+    if (!($result && $matches && $matches['type'] && $matches['boundary'])) {
+      return self::$input = ['forms' => [], 'files' => []];
+    }
+
+    $payload = self::inputStream();
+
+    $boundary = '--' . $matches['boundary'];
 
     $forms = [];
     $files = [];
-    $parts = array_slice(explode($boundary, $body), 1);
 
+    $parts = explode($boundary, $payload);
     foreach ($parts as $part) {
-      if ($part == "--\r\n" || $part == "--") {
-        break;
-      }
+      $part = trim($part);
 
-      $part = ltrim($part, "\r\n");
-      list($rawHeaders, $body) = explode("\r\n\r\n", $part, 2);
-
-      $headers = [];
-      $rawHeaders = explode("\r\n", $rawHeaders);
-
-      foreach ($rawHeaders as $header) {
-        list($name, $value) = explode(':', $header);
-        $headers[strtolower($name)] = ltrim($value, ' ');
-      }
-
-      if (!(isset($headers['content-disposition']) && ($content = $headers['content-disposition']))) {
-        break;
-      }
-
-      $filename = null;
-      $tmpname = null;
-
-      preg_match('/^(.+); *name="([^"]+)"(; *filename="([^"]+)")?/', $content, $matches);
-      list(, , $key) = $matches;
-
-      if (!isset($matches[4])) {
-        array_push($forms, urlencode($key) . '=' . urlencode(substr($body, 0, strlen($body) - 2)));
+      if (empty($part)) {
         continue;
       }
 
-      $tmpName = tempnam(ini_get('upload_tmp_dir'), pathinfo($matches[4], PATHINFO_FILENAME));
-      $bytes = @file_put_contents($tmpName, $body);
+      if (preg_match('/\s*Content-Disposition\s*:\s*form-data;\s*name\s*=\s*"(?P<key>[^"]+)";\s*filename\s*=\s*"(?P<name>[^"]+)"\s*/i', $part, $matches) && $matches && $matches['key'] && $matches['name']) {
+        $key = $matches['key'];
+        $name = $matches['name'];
+        $type = preg_match('/\s*Content-Type\s*:\s*(?P<type>[^\r\n]+)/', $part, $matches) && $matches && $matches['type'] ? $matches['type'] : 'application/octet-stream';
 
-      if ($bytes !== false) {
+        $index = strpos($part, "\r\n\r\n");
+        if ($index === false) {
+          continue;
+        }
+
+        $data = trim(substr($part, $index + 4));
+        $tmpName = tempnam(ini_get('upload_tmp_dir'), 'Maple_');
+        $bytes = @file_put_contents($tmpName, $data);
+
+        if ($bytes === false) {
+          continue;
+        }
+
         array_push($files, urlencode($key) . '=' . urlencode(json_encode([
-          'name' => $matches[4],
-          'type' => trim($value),
+          'name' => $name,
+          'type' => $type,
           'tmp_name' => $tmpName,
           'error' => 0,
-          'size' => strlen($body)
+          'size' => strlen($data)
         ])));
+        continue;
+      }
+
+      if (preg_match('/\s*Content-Disposition\s*:\s*form-data;\s*name\s*=\s*"(?P<key>[^"]+)"\s*/i', $part, $matches) && $matches && $matches['key']) {
+        $index = strpos($part, "\r\n\r\n");
+        array_push($forms, urlencode($matches['key']) . '=' . urlencode($index === false ? '' : trim(substr($part, $index + 4))));
+        continue;
       }
     }
-
     parse_str(implode('&', $files), $files);
     $files = self::cover1($files);
 
@@ -537,16 +531,29 @@ abstract class Request {
   }
 
   public static function rawText() {
-    if (!in_array(Request::headers('Content-Type'), ['text/plain', 'application/json'])) {
-      return null;
+    $contentType = Request::headers('Content-Type');
+
+    $result = preg_match('/^\s*(?P<type>text\/plain)(\s*;\s*)?(?P<other>.*)?\s*$/i', $contentType, $matches);
+    if ($result && $matches && $matches['type']) {
+      return self::inputStream();
     }
-    return self::inputStream();
+
+    $result = preg_match('/^\s*(?P<type>application\/json)(\s*;\s*)?(?P<other>.*)?\s*$/i', $contentType, $matches);
+    if ($result && $matches && $matches['type']) {
+      return self::inputStream();
+    }
+
+    return null;
   }
 
   public static function rawJson() {
-    if (!in_array(Request::headers('Content-Type'), ['application/json'])) {
+    $contentType = Request::headers('Content-Type');
+
+    $result = preg_match('/^\s*(?P<type>application\/json)(\s*;\s*)?(?P<other>.*)?\s*$/i', $contentType, $matches);
+    if (!($result && $matches && $matches['type'])) {
       return null;
     }
+
     $body = self::inputStream();
     return isJson($body) ? $body : null;
   }
