@@ -32,7 +32,7 @@ final class Helper {
     return array_map(static function (string $val) use ($types): array {
       $_name = '(?P<name>\w+)';
       $_type = '(?P<type>\w+)';
-      $_len = '(?:\(\s*(?P<minlen>\d+)?\s*,?\s*(?P<maxlen>\d+)?\s*\))?';
+      $_len = '(?:\(\s*(?P<minlen>\-?\d+)?\s*,?\s*(?P<maxlen>\-?\d+)?\s*\))?';
       $_main = $_name . '\s*:\s*' . $_type . '\s*' . $_len . '';
       $pattern = '/^\{\{\s*' . $_main . '\s*\}\}$/';
 
@@ -53,10 +53,10 @@ final class Helper {
           'type' => $type,
           'val' => $val,
           'name' => $name,
-          'len' => (in_array($type, Router::TYPE_STR) || $type == 'int') && ($minlen !== null || $maxlen !== null) ? [
+          'len' => [
             'min' => $minlen,
             'max' => $maxlen,
-          ] : null,
+          ],
         ];
       }
 

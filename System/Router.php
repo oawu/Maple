@@ -181,10 +181,10 @@ final class Router {
       if ($isStr) {
         $path = (string)$path;
 
-        if ($len !== null && $len['min'] !== null && strlen($path) < $len['min']) {
+        if ($len['min'] !== null && strlen($path) < $len['min']) {
           return null;
         }
-        if ($len !== null && $len['max'] !== null && strlen($path) > $len['max']) {
+        if ($len['max'] !== null && strlen($path) > $len['max']) {
           return null;
         }
 
@@ -209,62 +209,88 @@ final class Router {
 
       switch ($type) {
         case 'int':
-          if ($len !== null && $len['min'] !== null && $path < $len['min']) {
-            return null;
-          }
-          if ($len !== null && $len['max'] !== null && $path > $len['max']) {
+          if (($len['min'] !== null && $path < $len['min']) || ($len['max'] !== null && $path > $len['max'])) {
             return null;
           }
           $results[$name] = $path;
           break;
         case 'int8':
-          if (!($path >= -128 && $path <= 127)) {
+          $min = $len['min'] !== null ? max(-128, $len['min']) : -128;
+          $max = $len['max'] !== null ? min(127, $len['max']) : 127;
+
+          if ($path < $min || $path > $max) {
             return null;
           }
           $results[$name] = $path;
           break;
         case 'int16':
-          if (!($path >= -32768 && $path <= 32767)) {
+          $min = $len['min'] !== null ? max(-32768, $len['min']) : -32768;
+          $max = $len['max'] !== null ? min(32767, $len['max']) : 32767;
+
+          if ($path < $min || $path > $max) {
             return null;
           }
           $results[$name] = $path;
           break;
         case 'int32':
-          if (!($path >= -2147483648 && $path <= 2147483647)) {
+          $min = $len['min'] !== null ? max(-2147483648, $len['min']) : -2147483648;
+          $max = $len['max'] !== null ? min(2147483647, $len['max']) : 2147483647;
+
+          if ($path < $min || $path > $max) {
             return null;
           }
           $results[$name] = $path;
           break;
         case 'int64':
-          if (!($path >= -9223372036854775808 && $path <= 9223372036854775807)) {
+          $min = $len['min'] !== null ? max(-9223372036854775808, $len['min']) : -9223372036854775808;
+          $max = $len['max'] !== null ? min(9223372036854775807, $len['max']) : 9223372036854775807;
+
+          if ($path < $min || $path > $max) {
             return null;
           }
           $results[$name] = $path;
           break;
 
         case 'uint':
+          $min = 0;
+
+          if ($path < $min || ($len['max'] !== null && $path > $len['max'])) {
+            return null;
+          }
           $results[$name] = $path;
           break;
         case 'uint8':
-          if (!($path <= 255)) {
+          $min = 0;
+          $max = $len['max'] !== null ? min(255, $len['max']) : 255;
+
+          if ($path < $min || $path > $max) {
             return null;
           }
           $results[$name] = $path;
           break;
         case 'uint16':
-          if (!($path <= 65535)) {
+          $min = 0;
+          $max = $len['max'] !== null ? min(65535, $len['max']) : 65535;
+
+          if ($path < $min || $path > $max) {
             return null;
           }
           $results[$name] = $path;
           break;
         case 'uint32':
-          if (!($path <= 4294967295)) {
+          $min = 0;
+          $max = $len['max'] !== null ? min(4294967295, $len['max']) : 4294967295;
+
+          if ($path < $min || $path > $max) {
             return null;
           }
           $results[$name] = $path;
           break;
         case 'uint64':
-          if (!($path <= 18446744073709551615)) {
+          $min = 0;
+          $max = $len['max'] !== null ? min(18446744073709551615, $len['max']) : 18446744073709551615;
+
+          if ($path < $min || $path > $max) {
             return null;
           }
           $results[$name] = $path;
