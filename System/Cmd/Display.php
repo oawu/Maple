@@ -1,36 +1,30 @@
 <?php
 
-namespace CMD {
-  use function \failure;
+namespace Cmd;
 
-  class Display {
-    private static $index = 0;
+class Display {
+  private static $_index = 0;
 
-    public static function main($title) {
-      self::$index = 0;
-      QUIET || print("\n◉ " . $title . "\n");
+  public static function main(string $title): string {
+    self::$_index = 0;
+    return "\n◉ " . $title . "\n";
+  }
+  public static function title(string $title): string {
+    return '  ' . ++self::$_index . '. ' . $title . ' ─ ';
+  }
+  public static function result(string $str): string {
+    return $str . "\n";
+  }
+  public static function list(string ...$items): string {
+    $strs = '';
+    foreach ($items as $item) {
+      $item = trim($item);
+
+      if ($item !== '') {
+        $strs .= '  ※ ' . $item . "\n";
+      }
     }
 
-    public static function title($title) {
-      QUIET || print('  ' . ++self::$index . '. ' . $title . ' ─ ');
-    }
-
-    public static function success($result = true, $str = '完成') {
-      QUIET || print($str . "\n");
-      return $result;
-    }
-
-    public static function failure($errs = []) {
-      QUIET || print("錯誤\n");
-      failure($errs);
-      exit(1);
-    }
-
-    public static function list(...$items) {
-      $items = QUIET ? [] : array_filter($items);
-      return $items ? implode("\n", array_map(function($item) {
-        return '  ※ ' . $item;
-      }, $items)) . "\n\n" : '';
-    }
+    return $strs !== '' ? $strs . "\n" : '';
   }
 }

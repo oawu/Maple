@@ -1,9 +1,9 @@
 
-Maple 8 遷移指令 - migration
+Maple 9 遷移指令 - migration
 
   ◉ 指令：
     migration
-    
+
     說明：
       將 migration 更新至最新版。
 
@@ -11,7 +11,7 @@ Maple 8 遷移指令 - migration
 
   ◉ 指令：
     migration <version>
-    
+
     說明：
       更新至指定的版號，若指定的版本低於現行版本，則會降版。
       反之，若指定版本高於目前版本，則為升版，若沒指定版本號碼，則會更新最新版。

@@ -1,13 +1,13 @@
 
-Maple 8 初始指令 - init
+Maple 9 初始指令 - init
 
   ◉ 指令：
     init <environment>
-    
+
     說明：
       environment 為環境名稱，目前允許的值
-      有 Development、Testing、Staging、Production 四種。
+      有 Local、Development、Beta、Staging、Production 這五種。
 
-      初始化時，會自動補上所需之目錄，Env.php 則會覆蓋上去。
+      初始化時，會自動補上所需之目錄，_Env.php 則會覆蓋上去。
       若已存在的目錄或檔案則會忽略。
 

@@ -1,9 +1,9 @@
 
-Maple 8 新增指令 - create
+Maple 9 新增指令 - create
 
   ◉ 指令：
     create [--migration | -I] <type> <name> [<action>]
-  
+
     說明：
       建立 Migration 檔案，type 為類型，
       name 為資料表名稱，action 為動作。
@@ -32,13 +32,13 @@ Maple 8 新增指令 - create
     參數：
         [--pic | -P] <column>
         [--file | -F] <column>
-    
+
     說明：
       建立 Model 檔案，model name 通常以大駝峰命名方式。
       可使用進階參數配置「上傳器」功能。
       如有欄位需綁定圖片可使用 [--pic | -P] 參數
       如有欄位需綁定檔案可使用 [--file | -F] 參數
-      
+
       以新增 User Model，avatar 與 banner 為圖片欄位，resume 為檔案欄位為例：
         指令為：create -M User -P avatar banner -F resume
         或者為：create -M User --pic avatar banner --file resume

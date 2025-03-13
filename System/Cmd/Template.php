@@ -1,39 +1,36 @@
 <?php
-namespace CMD {
-  class Template {
-    public static function shellScript($path, $params = []) {
-      $path = PATH_SYSTEM_CMD . 'Template' . DIRECTORY_SEPARATOR . 'ShellScript' . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
-      return self::load($path, $params);
+
+namespace Cmd;
+
+final class Template {
+  public static function php(string $path, array $params = []): string {
+    $path = PATH_SYSTEM_CMD . 'Template' . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
+    return '<?php' . "\n" . self::_load($path, $params);
+  }
+
+  public static function read(string $path, array $params = []): string {
+    $path = PATH_SYSTEM_CMD . 'Template' . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
+    return self::_load($path, $params);
+  }
+
+  public static function get(string $path, array $params = []): string {
+    return file_get_contents(PATH_SYSTEM_CMD . 'Template' . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) . '.template');
+  }
+
+  private static function _load(string $___B10g___aT_M9pL30___path___B10g___aT_M9pL30___, array $___B10g___aT_M9pL30___pARams___B10g___aT_M9pL30___ = []): string {
+    $___B10g___aT_M9pL30___path___B10g___aT_M9pL30___ .= '.template';
+
+    if (!is_readable($___B10g___aT_M9pL30___path___B10g___aT_M9pL30___)) {
+      return '';
     }
 
-    public static function php($path, $params = []) {
-      $path = PATH_SYSTEM_CMD . 'Template' . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
-      return '<?php' . "\n" . self::load($path, $params);
-    }
+    extract($___B10g___aT_M9pL30___pARams___B10g___aT_M9pL30___);
+    ob_start();
 
-    public static function read($path, $params = []) {
-      $path = PATH_SYSTEM_CMD . 'Template' . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
-      return self::load($path, $params);
-    }
+    include $___B10g___aT_M9pL30___path___B10g___aT_M9pL30___;
+    $buffer = ob_get_contents();
+    @ob_end_clean();
 
-    public static function get($path, $params = []) {
-      return file_get_contents(PATH_SYSTEM_CMD . 'Template' . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) . '.template');
-    }
-
-    private static function load($___B10g___aT_M8pL30___path___B10g___aT_M8pL30___, $___B10g___aT_M8pL30___pARams___B10g___aT_M8pL30___ = []) {
-      $___B10g___aT_M8pL30___path___B10g___aT_M8pL30___ .= '.template';
-
-      if (!is_readable($___B10g___aT_M8pL30___path___B10g___aT_M8pL30___))
-        return '';
-
-      extract($___B10g___aT_M8pL30___pARams___B10g___aT_M8pL30___);
-      ob_start();
-
-      include $___B10g___aT_M8pL30___path___B10g___aT_M8pL30___;
-      $buffer = ob_get_contents();
-      @ob_end_clean();
-      
-      return $buffer;
-    }
+    return $buffer;
   }
 }

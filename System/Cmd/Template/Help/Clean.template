@@ -1,5 +1,5 @@
 
-Maple 8 清除指令 - clean
+Maple 9 清除指令 - clean
 
   ◉ 指令：
     clean
@@ -11,7 +11,7 @@ Maple 8 清除指令 - clean
 
   ◉ 指令：
     clean [--cache | -C]
-  
+
     說明：
       清除 File/Cache 目錄內的檔案。
 

@@ -1,9 +1,9 @@
 
-Maple 8 新增 Migration 指令 - create migration
+Maple 9 新增 Migration 指令 - create migration
 
   ◉ 指令：
     create [--migration | -I] <type> <name> [<action>]
-  
+
     說明：
       建立 Migration 檔案，type 為類型，
       name 為資料表名稱，action 為動作。

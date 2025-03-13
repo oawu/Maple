@@ -1,26 +1,38 @@
 
+define('PATH', dirname(__FILE__, 2) . DIRECTORY_SEPARATOR);
+define('PATH_SYSTEM', PATH . 'System' . DIRECTORY_SEPARATOR);
+
+
 /* --------------------------------------------------
- *  載入進入點
+ *  載入路徑
  * -------------------------------------------------- */
+require_once PATH_SYSTEM . '_Path.php';
 
-require_once dirname(__FILE__, 2)
-  . DIRECTORY_SEPARATOR . 'System'
-  . DIRECTORY_SEPARATOR . 'Entry.php';
 
+/* --------------------------------------------------
+ *  載入密鑰
+ * -------------------------------------------------- */
+require_once PATH_SYSTEM . '_Key.php';
+
+
+/* --------------------------------------------------
+ *  載入環境
+ * -------------------------------------------------- */
+require_once PATH_SYSTEM . '_Env.php';
 
 
 /* --------------------------------------------------
  *  載入核心
  * -------------------------------------------------- */
-
-require_once dirname(__FILE__, 2)
-  . DIRECTORY_SEPARATOR . 'System'
-  . DIRECTORY_SEPARATOR . 'Maple.php';
+require_once PATH_SYSTEM . '_Entry.php';
 
 
+/* --------------------------------------------------
+ *  載入核心
+ * -------------------------------------------------- */
+require_once PATH_SYSTEM . '_Maple.php';
 
 /* --------------------------------------------------
  *  結束
  * -------------------------------------------------- */
-
 exit(0);

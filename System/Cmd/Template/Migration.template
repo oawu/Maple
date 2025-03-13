@@ -116,8 +116,8 @@ return [
     //   PRIMARY KEY (`id`),
     //   KEY `userId_index` (`userId`)
     // ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='資料表註解';
-  
-  
+
+
   # 刪除
     // DROP TABLE IF EXISTS `{資料表名稱}`;
 
