@@ -4,7 +4,7 @@
 
 ## 說明
 * 這是一套 [OA Wu](https://www.ioa.tw/) 所製作的個人 [PHP](https://www.php.net/) 框架！
-* 此框架僅支援 (PHP 7.4.33+)[https://www.php.net/releases/7_4_33.php] （包含）以上。
+* 此框架僅支援 (PHP 7.4+)[https://www.php.net/releases/7_4_0.php] （包含）以上。
 * 主要大功能如下：
   * 指令控制框架
   * 針對資料庫採用 Migration 管理

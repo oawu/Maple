@@ -1,6 +1,6 @@
 <?php
 
-$requiredVersion = '7.4.33';
+$requiredVersion = '7.4.0';
 
 if (version_compare(PHP_VERSION, $requiredVersion, '<')) {
   echo sprintf('PHP 版本需求不符合：目前版本 %s，需要 %s 或更高版本！', PHP_VERSION, $requiredVersion);
