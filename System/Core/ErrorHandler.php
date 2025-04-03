@@ -17,6 +17,30 @@ if (!function_exists('notFound')) {
   }
 }
 
+if (!function_exists('transaction')) {
+  function transaction(callable $closure, ?string $db = null, ?string $error = null, ?int $code = null) {
+    $result = \Orm\Helper::transaction($db, $closure, $errors);
+
+    if ($errors !== null) {
+      error($error ?? '資料庫錯誤！', $code ?? 400);
+    }
+
+    return $result;
+  }
+}
+
+if (!function_exists('tryFunc')) {
+  function tryFunc(callable $closure, $return = null) {
+    try {
+      return $closure();
+    } catch (\Throwable $e) {
+      return $return ?? $e;
+    } catch (\Exception $e) {
+      return $return ?? $e;
+    }
+  }
+}
+
 if (!function_exists('_handler')) {
   function _handler(array $traces, array $details): void {
     $traces = array_filter(array_map(static function (array $trace): string {

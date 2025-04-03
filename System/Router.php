@@ -326,7 +326,8 @@ final class Router {
     return $return;
   }
   private static function _executeFunc(callable $func, $return) {
-    return $func($return);
+    $params = \Request::getParams();
+    return $func(...[...array_values($params), $return]);
   }
   private static function _executeController(string $class, string $method, $return) {
     if (!class_exists($class)) {
@@ -339,8 +340,8 @@ final class Router {
       \notFound('此路由控制器方法「' . $class . '」不存在！');
       return;
     }
-
-    return $controller->$method($return);
+    $params = \Request::getParams();
+    return $controller->$method(...[...array_values($params), $return]);
   }
 
   private string $_method;

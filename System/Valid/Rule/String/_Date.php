@@ -11,6 +11,10 @@ final class _Date extends _String {
 
     $data = $this->getData();
 
+    if (!$this->getIsRequired() && $data === null) {
+      return $this->getIfNull();
+    }
+
     if (\DateTime::createFromFormat('Y-m-d', $data) === false) {
       throw new \Valid\Exception($this->getReasonTitle() . '必須是「yyyy-MM-dd」的「Date」格式', $this->getCode());
     }

@@ -1,5 +1,7 @@
 <?php
 
+date_default_timezone_set('Asia/Taipei');
+
 $requiredVersion = '7.4.0';
 
 if (version_compare(PHP_VERSION, $requiredVersion, '<')) {

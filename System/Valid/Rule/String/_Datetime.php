@@ -11,6 +11,10 @@ final class _Datetime extends _String {
 
     $data = $this->getData();
 
+    if (!$this->getIsRequired() && $data === null) {
+      return $this->getIfNull();
+    }
+
     if (\DateTime::createFromFormat('Y-m-d H:i:s', $data) === false) {
       throw new \Valid\Exception($this->getReasonTitle() . '必須是「yyyy-MM-dd HH:mm:ss」的「Datetime」格式', $this->getCode());
     }

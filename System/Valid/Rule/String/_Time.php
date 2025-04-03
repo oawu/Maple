@@ -11,6 +11,10 @@ final class _Time extends _String {
 
     $data = $this->getData();
 
+    if (!$this->getIsRequired() && $data === null) {
+      return $this->getIfNull();
+    }
+
     if (\DateTime::createFromFormat('H:i:s', $data) === false) {
       throw new \Valid\Exception($this->getReasonTitle() . '必須是「HH:mm:ss」的「Time」格式', $this->getCode());
     }
