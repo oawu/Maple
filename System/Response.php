@@ -135,6 +135,11 @@ final class Response {
       'code' => $code
     ];
   }
+  public static function setType(string $type): void {
+    if (array_key_exists($type, self::TYPE)) {
+      self::$_type = $type;
+    }
+  }
 
   private static function _getType(): string {
     if (self::$_type !== null) {
