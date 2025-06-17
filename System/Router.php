@@ -95,12 +95,29 @@ final class Router {
     $method = Request::getMethod();
     $paths = Request::getPaths();
 
-    if (!isset(self::$_routers[$method])) {
+    $routers = self::$_routers;
+
+    foreach ($routers as $rs) {
+      foreach ($rs as $router) {
+        $result = $router->getCorsOptionsResponse();
+
+        if ($result !== null) {
+          $routers['OPTIONS'][] = Router::options()
+            ->setGroup(...$router->getGroups())
+            ->setPath(...$router->getPaths(true, false))
+            ->setMiddleware(...$router->getMiddlewares(false))
+            ->setTitle($router->getTitle())
+            ->func(fn() => $result);
+        }
+      }
+    }
+
+    if (!isset($routers[$method])) {
       \notFound('此 Method「' . $method . '」對應不到路由！');
       return;
     }
 
-    $routers = self::$_routers[$method];
+    $routers = $routers[$method];
     $params = [];
 
     foreach ($routers as $router) {
@@ -119,7 +136,10 @@ final class Router {
     }
 
     // 清除路由器
+    $routers = [];
     self::$_routers = [];
+
+    // 設定參數
     Request::setParams($params);
 
     $return = self::_executeMiddleware(self::getCurrent());
@@ -350,13 +370,14 @@ final class Router {
   private string $_title = '';
   private array $_middlewares = [];
   private ?array $_task = null;
+  private ?string $_corsOptionsResponse = null;
 
   private function __construct(string $method, string ...$paths) {
     $this->_method = strtoupper($method);
 
     $groupsTraces = array_filter(debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT), fn($groupsTrace) => isset($groupsTrace['class'], $groupsTrace['object']) && $groupsTrace['class'] === 'Router\Group' && $groupsTrace['object'] instanceof Group);
 
-    $this->setGroups(...array_reverse(array_map(fn($groupsTrace) => $groupsTrace['object'], $groupsTraces)));
+    $this->setGroup(...array_reverse(array_map(fn($groupsTrace) => $groupsTrace['object'], $groupsTraces)));
     $this->setPath(...$paths);
 
     if (!isset(self::$_routers[$this->_method])) {
@@ -366,7 +387,7 @@ final class Router {
     self::$_routers[$this->_method][] = $this;
   }
 
-  public function setGroups(Group ...$groups): self {
+  public function setGroup(Group ...$groups): self {
     $this->_groups = $groups;
     return $this;
   }
@@ -380,11 +401,13 @@ final class Router {
     $this->_paths = \Router\Helper::paths(...$paths);
     return $this;
   }
-  public function getPaths(bool $isOnlyVal = true): array {
+  public function getPaths(bool $isOnlyVal = true, bool $withGroup = true): array {
     $paths = [];
-    foreach ($this->getGroups() as $group) {
-      foreach ($group->getPaths($isOnlyVal) as $path) {
-        $paths[] = $path;
+    if ($withGroup) {
+      foreach ($this->getGroups() as $group) {
+        foreach ($group->getPaths($isOnlyVal) as $path) {
+          $paths[] = $path;
+        }
       }
     }
     foreach ($this->_paths as $path) {
@@ -400,6 +423,39 @@ final class Router {
   public function path(string ...$paths): self {
     return $this->setPath(...$paths);
   }
+  public function setCorsOptionsResponse(?string $response): self {
+    $this->_corsOptionsResponse = $response;
+    return $this;
+  }
+  public function getCorsOptionsResponse(bool $withGroup = true): ?string {
+    if ($this->_corsOptionsResponse !== null) {
+      return $this->_corsOptionsResponse;
+    }
+
+    if ($withGroup) {
+      $groups = array_reverse($this->getGroups());
+      foreach ($groups as $group) {
+        $corsOptionsResponse = $group->getCorsOptionsResponse();
+        if ($corsOptionsResponse !== null) {
+          return $corsOptionsResponse;
+        }
+      }
+    }
+
+    return null;
+  }
+  public function corsOptionsResponse(?string $response): self {
+    return $this->setCorsOptionsResponse($response);
+  }
+  public function corsResponse(?string $response): self {
+    return $this->setCorsOptionsResponse($response);
+  }
+  public function corsOptions(?string $response): self {
+    return $this->setCorsOptionsResponse($response);
+  }
+  public function cors(?string $response): self {
+    return $this->setCorsOptionsResponse($response);
+  }
   public function setTitle(string $title): self {
     $this->_title = $title;
     return $this;
@@ -414,11 +470,13 @@ final class Router {
     $this->_middlewares = \Router\Helper::middlewares(...$middlewares);
     return $this;
   }
-  public function getMiddlewares(): array {
+  public function getMiddlewares(bool $withGroup = true): array {
     $middlewares = [];
-    foreach ($this->getGroups() as $group) {
-      foreach ($group->getMiddlewares() as $middleware) {
-        $middlewares[] = $middleware;
+    if ($withGroup) {
+      foreach ($this->getGroups() as $group) {
+        foreach ($group->getMiddlewares() as $middleware) {
+          $middlewares[] = $middleware;
+        }
       }
     }
     foreach ($this->_middlewares as $middleware) {

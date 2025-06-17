@@ -8,6 +8,7 @@ Router::post()->controller(\App\Controller\Main::class);
 
 // Group::create('api')
 //   ->middleware(App\Middleware\Cors::class)
+//   ->corsOptionsResponse('ok!')
 //   ->routers(static function() {
 //
 //     Router::get('users')->controller(\App\Controller\Api\User::class);
