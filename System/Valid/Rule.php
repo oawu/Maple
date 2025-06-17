@@ -296,6 +296,9 @@ abstract class Rule {
   public function ifNull($val): self {
     return $this->setIfNull($val);
   }
+  public function null($val): self {
+    return $this->setIfNull($val);
+  }
   public function getIfNull() {
     return $this->_ifNull;
   }
@@ -306,6 +309,9 @@ abstract class Rule {
   public function ifNoKey($val): self {
     return $this->setIfNoKey($val);
   }
+  public function noKey($val): self {
+    return $this->setIfNoKey($val);
+  }
   public function getIfNoKey(): ?array {
     return $this->_ifNoKey;
   }
@@ -313,6 +319,9 @@ abstract class Rule {
     return $this->setIfNull($val)->setIfNoKey($val);
   }
   public function ifNullOrNoKey($val): self {
+    return $this->setIfNullOrNoKey($val);
+  }
+  public function nullOrNoKey($val): self {
     return $this->setIfNullOrNoKey($val);
   }
   public function setData($data): self {
