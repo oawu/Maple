@@ -10,6 +10,7 @@ final class Request {
   private static ?array $_cookies = null;
   private static ?array $_queries = null;
   private static ?array $_paths = null;
+  private static ?array $_argvs = null;
   private static array $_params = [];
 
   public static function getServers(): array {
@@ -126,6 +127,24 @@ final class Request {
     self::$_queries = $queries;
     return $queries['val'];
   }
+  public static function getArgvs(): array {
+    if (self::$_argvs !== null) {
+      return self::$_argvs['val'];
+    }
+
+    $paths = [];
+    if (self::getMethod() != 'CLI') {
+      self::$_argvs['val'] = $paths;
+      return $paths;
+    }
+
+    $server = self::getServers();
+    $paths = array_slice($server['argv'] ?? [], 1);
+    $paths = array_slice($paths ?? [], 1);
+    self::$_argvs['val'] = $paths;
+    return $paths;
+  }
+
   public static function getPaths(): array {
     if (self::$_paths !== null) {
       return self::$_paths['val'];
@@ -136,6 +155,8 @@ final class Request {
     if (self::getMethod() == 'CLI') {
       $server = self::getServers();
       $_paths = array_slice($server['argv'] ?? [], 1);
+      $_paths = $_paths ? [array_shift($_paths)] : [];
+
       foreach ($_paths as $path) {
         $tmps = Helper::explodePath($path, '/', ['/']);
         foreach ($tmps as $tmp) {
@@ -192,6 +213,9 @@ final class Request {
   }
   public static function paths(): array {
     return self::getPaths();
+  }
+  public static function argvs(): array {
+    return self::getArgvs();
   }
   public static function params(): array {
     return self::getParams();
