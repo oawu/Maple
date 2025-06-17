@@ -1,0 +1,39 @@
+
+namespace App\Model;
+<?php
+if ($images && $files) { ?>
+
+use \Orm\Core\Plugin\Uploader\Image;
+use \Orm\Core\Plugin\Uploader\File;
+<?php
+} else if ($images) { ?>
+
+use \Orm\Core\Plugin\Uploader\Image;
+<?php
+} else if ($files) { ?>
+
+use \Orm\Core\Plugin\Uploader\File;
+<?php
+} ?>
+
+class <?php echo $model;?> extends \Orm\Model {}
+<?php
+if ($images) {
+  foreach($images as $image) { ?>
+
+<?php echo $model;?>::bindImage('<?php echo $image;?>', static function(Image $image) {
+//  $image
+//    ->addVersion('w100')
+//    ->setMethod('resize')
+//    ->setArgs(100, 100, 'width');
+});
+<?php
+  }
+}
+if ($files) {
+  foreach($files as $file) { ?>
+
+<?php echo $model;?>::bindFile('<?php echo $file;?>');
+<?php
+  }
+}
