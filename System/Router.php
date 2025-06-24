@@ -487,7 +487,11 @@ final class Router {
   public function middleware(string ...$middlewares): self {
     return $this->setMiddleware(...$middlewares);
   }
-  public function controller(string $controller): self {
+  public function controller(string $controller, string $method = ''): self {
+    if ($method !== '') {
+      $controller = $controller . '@' . $method;
+    }
+
     [$class, $method] = explode('@', $controller) + ['', ''];
 
     if ($class === '') {
