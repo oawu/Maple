@@ -144,7 +144,7 @@ final class Router {
 
     $return = self::_executeMiddleware(self::getCurrent());
 
-    $task = self::current()->_getTask();
+    $task = self::current()->getTask();
     if ($task === null) {
       \notFound('此路由未設定要執行的 func 或 controller！');
       return;
@@ -518,7 +518,24 @@ final class Router {
     return $this;
   }
 
-  private function _getTask(): ?array {
+  public function getTask(): ?array {
     return $this->_task;
+  }
+  public function task(): ?array {
+    return $this->getTask();
+  }
+
+  public function __toString() {
+    $task = $this->_task;
+    $title = $this->_title;
+
+    if ($task['type'] === 'func') {
+      return ($title !== '' ? $title . ' | ' : '') . '[' . $this->_method . '] func()';
+    }
+    if ($task['type'] === 'controller') {
+      return ($title !== '' ? $title . ' | ' : '') . '[' . $this->_method . '] ' . $task['class'] . '@' . $task['method'];
+    }
+
+    return trim($title);
   }
 }
