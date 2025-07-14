@@ -1,7 +1,7 @@
 <?php
 
 if (!function_exists('error')) {
-  function error(string $message = '', int $code = 500): void {
+  function error(string $message = '', ?int $code = null): void {
     $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0];
     $exception = new \Error\GG([$message], $code);
     $exception->setFile($backtrace['file'])->setLine($backtrace['line']);

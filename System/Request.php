@@ -40,6 +40,7 @@ final class Request {
     if (self::$_other !== null && array_key_exists('ip', self::$_other)) {
       return self::$_other['ip'];
     }
+
     if (self::$_other === null) {
       self::$_other = [];
     }
@@ -54,6 +55,8 @@ final class Request {
     if (self::$_method !== null) {
       return self::$_method['val'];
     }
+
+    self::$_method = [];
 
     if (PHP_SAPI === 'cli' || defined('STDIN')) {
       self::$_method['val'] = 'CLI';
@@ -144,7 +147,6 @@ final class Request {
     self::$_argvs['val'] = $paths;
     return $paths;
   }
-
   public static function getPaths(): array {
     if (self::$_paths !== null) {
       return self::$_paths['val'];
@@ -190,6 +192,33 @@ final class Request {
   public static function setParams(array $params): void {
     self::$_params = $params;
   }
+  public static function getBaseUrl(): string {
+    if (self::$_other !== null && array_key_exists('baseUrl', self::$_other)) {
+      return self::$_other['baseUrl'];
+    }
+    if (self::$_other === null) {
+      self::$_other = [];
+    }
+
+    $servers = \Request::servers();
+    if (!(isset($servers['HTTP_HOST']) && $servers['HTTP_HOST'] !== '')) {
+      self::$_other['baseUrl'] = '';
+      return self::$_other['baseUrl'];
+    }
+
+    $protocal = 'http://';
+    $port = '';
+    if (isset($servers['HTTPS']) && strtolower($servers['HTTPS']) !== 'off') {
+      $protocal = 'https://';
+    }
+    if (isset($servers['SERVER_PORT']) && $servers['SERVER_PORT'] !== '80') {
+      $port = ':' . $servers['SERVER_PORT'];
+    }
+
+    self::$_other['baseUrl'] = $protocal . $servers['HTTP_HOST'] . $port . '/';
+    return self::$_other['baseUrl'];
+  }
+
   public static function servers(): array {
     return self::getServers();
   }
@@ -219,5 +248,8 @@ final class Request {
   }
   public static function params(): array {
     return self::getParams();
+  }
+  public static function baseUrl(): string {
+    return self::getBaseUrl();
   }
 }
