@@ -1,0 +1,23 @@
+
+$details = implode("\n", array_map(fn($detail) => '  ◉ ' . $detail['title'] . '：' . $detail['content'], $details));
+$traces = implode("\n", array_map(fn($trace) => '  ◉ ' . $trace['info'] . "\n" . '    ↳ ' . $trace['path'], $traces));
+
+if (!($message !== '' || $details || $traces || $buffer !== '')) {
+  echo "\n【錯誤】\n";
+}
+
+if ($message !== '') {
+  echo "\n【錯誤訊息】\n  ◉ " . $message . "\n\n";
+}
+
+if ($details) {
+  echo "\n【錯誤原因】\n" . $details . "\n\n";
+}
+
+if ($traces) {
+  echo "\n【錯誤追蹤】\n" . $traces . "\n\n";
+}
+
+if ($buffer !== '') {
+  echo "\n【緩衝區內容】\n" . $buffer . "\n\n";
+}

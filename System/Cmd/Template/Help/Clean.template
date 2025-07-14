@@ -1,0 +1,25 @@
+
+Maple 9 清除指令 - clean
+
+  ◉ 指令：
+    clean
+
+    說明：
+      清除 File/Cache 與 File/Tmp 目錄內的檔案。
+
+
+
+  ◉ 指令：
+    clean [--cache | -C]
+
+    說明：
+      清除 File/Cache 目錄內的檔案。
+
+
+
+  ◉ 指令：
+    clean [--tmp | -T]
+
+  說明：
+    清除 File/Tmp 目錄內的檔案。
+
