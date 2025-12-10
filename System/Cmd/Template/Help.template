@@ -1,0 +1,24 @@
+
+Maple 9 指令列表
+
+  ◉ 初始
+    init <environment>                                   ─ 初始專案環境
+
+  ◉ 新增
+    create [--migration | -I] <type> <name> [<action>]   ─ 建立 Migration
+    create [--model | -M] <model name>                   ─ 建立 Model
+
+  ◉ 遷移
+    migration                                            ─ 更新至最新版本
+    migration <version>                                  ─ 更新至指定版號
+    migration [--refresh | -R]                           ─ 重置 Migration
+
+  ◉ 清除
+    clean                                                ─ 清除快取與暫存檔案
+    clean [--cache | -C]                                 ─ 清除快取檔案
+    clean [--tmp | -T]                                   ─ 清除暫存檔案
+
+  ◉ 部署
+    deploy                                               ─ 部署所有站台
+    deploy [--stage | -S] <stage name>                   ─ 部署至指定的站台
+

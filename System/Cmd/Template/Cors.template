@@ -1,0 +1,27 @@
+
+namespace App\Middleware;
+
+use \Request;
+use \Response;
+
+class Cors {
+  private $_origins = [
+    'http://127.0.0.1:8000',
+  ];
+
+  private $_methods = ['POST', 'PUT', 'DELETE', 'OPTIONS'];
+  private $_headers = ['Content-Type', 'Authorization', 'X-Requested-With', 'authorization'];
+
+  public function index(): void {
+    $headers = Request::getHeaders();
+
+    if ($this->_origins) {
+      $origin = $headers['Origin'] ?? '';
+      if (in_array($origin, $this->_origins)) {
+        Response::setHeader('Access-Control-Allow-Headers', implode(', ', $this->_headers));
+        Response::setHeader('Access-Control-Allow-Methods', implode(', ', $this->_methods));
+        Response::setHeader('Access-Control-Allow-Origin', $origin);
+      }
+    }
+  }
+}

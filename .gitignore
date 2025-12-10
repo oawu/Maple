@@ -1,0 +1,25 @@
+sftp-config*
+
+/Config/*/
+/File/*
+/Public/Storage/*
+/vendor/*
+
+composer.lock
+/System/_Env.php
+/System/_Key.php
+
+# IDE 和編輯器檔案
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 環境設定檔
+.env
+.env.local
+.env.*.local
+
+# 系統檔案
+Thumbs.db
+.DS_Store

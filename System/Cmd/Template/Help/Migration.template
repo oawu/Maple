@@ -1,0 +1,26 @@
+
+Maple 9 遷移指令 - migration
+
+  ◉ 指令：
+    migration
+
+    說明：
+      將 migration 更新至最新版。
+
+
+
+  ◉ 指令：
+    migration <version>
+
+    說明：
+      更新至指定的版號，若指定的版本低於現行版本，則會降版。
+      反之，若指定版本高於目前版本，則為升版，若沒指定版本號碼，則會更新最新版。
+
+
+
+  ◉ 指令：
+    migration [--refresh | -R]
+
+    說明：
+      重置 migration，將目前版本降至第 0 版後再升至最新版本。
+
